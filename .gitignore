@@ -1,0 +1,20 @@
+.DS_Store
+.derivedData/
+DerivedData/
+build/
+*.xcresult
+*.ipa
+*.dSYM
+*.app
+*.appex
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+
+# XcodeGen output. Regenerate with `xcodegen generate`.
+CheatSheet.xcodeproj/
+
+# Swift Package Manager
+.build/
+.swiftpm/

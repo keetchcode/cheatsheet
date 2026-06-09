@@ -1,0 +1,108 @@
+name: CheatSheet
+options:
+  bundleIdPrefix: com.wesleykeetch
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    GENERATE_INFOPLIST_FILE: YES
+    ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "2"
+targets:
+  CheatSheet:
+    type: application
+    platform: macOS
+    info:
+      path: CheatSheetApp/Info.plist
+      properties:
+        CFBundleDisplayName: CheatSheet
+        CFBundleIconFile: AppIcon
+        CFBundleIconName: AppIcon
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSApplicationCategoryType: public.app-category.productivity
+        NSHumanReadableCopyright: ""
+    sources:
+      - path: CheatSheetApp/Sources
+      - path: Shared/Sources
+      - path: CheatSheetApp/Resources
+        type: resources
+    dependencies:
+      - target: CheatSheetWidgets
+        embed: true
+    entitlements:
+      path: CheatSheetApp/CheatSheet.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups:
+          - HD39MR492X.com.wesleykeetch.CheatSheet
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.CheatSheet
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: CheatSheetApp/CheatSheet.entitlements
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: HD39MR492X
+  CheatSheetWidgets:
+    type: app-extension
+    platform: macOS
+    info:
+      path: CheatSheetWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: CheatSheet Widgets
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    sources:
+      - path: CheatSheetWidgets/Sources
+      - path: Shared/Sources/CheatSheetNote.swift
+      - path: Shared/Sources/CheatSheetNoteRepository.swift
+      - path: Shared/Sources/DisplayLine.swift
+      - path: CheatSheetWidgets/Resources
+        type: resources
+    entitlements:
+      path: CheatSheetWidgets/CheatSheetWidgets.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups:
+          - HD39MR492X.com.wesleykeetch.CheatSheet
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.CheatSheet.widgets
+        CODE_SIGN_ENTITLEMENTS: CheatSheetWidgets/CheatSheetWidgets.entitlements
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: HD39MR492X
+  CheatSheetTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: CheatSheetTests/Sources
+      - path: Shared/Sources
+      - path: CheatSheetApp/Sources/NoteStore.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.CheatSheetTests
+schemes:
+  CheatSheet:
+    build:
+      targets:
+        CheatSheet: all
+        CheatSheetWidgets: all
+        CheatSheetTests: all
+    test:
+      targets:
+        - CheatSheetTests
+    run:
+      config: Debug
+  CheatSheetApp:
+    build:
+      targets:
+        CheatSheet: all
+        CheatSheetWidgets: all
+    run:
+      config: Debug

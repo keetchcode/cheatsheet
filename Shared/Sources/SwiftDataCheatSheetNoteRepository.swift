@@ -1,0 +1,104 @@
+import Foundation
+import SwiftData
+
+public enum CheatSheetNoteRepositoryFactory {
+    public static func live() -> any CheatSheetNoteRepository {
+        do {
+            return SwiftDataCheatSheetNoteRepository(
+                container: try SwiftDataCheatSheetNoteRepository.makeDefaultContainer(),
+                legacyRepository: UserDefaultsCheatSheetNoteRepository()
+            )
+        } catch {
+            return UserDefaultsCheatSheetNoteRepository()
+        }
+    }
+}
+
+public final class SwiftDataCheatSheetNoteRepository: CheatSheetNoteRepository {
+    private let container: ModelContainer
+    private let legacyRepository: (any CheatSheetNoteRepository)?
+
+    init(
+        container: ModelContainer,
+        legacyRepository: (any CheatSheetNoteRepository)? = nil
+    ) {
+        self.container = container
+        self.legacyRepository = legacyRepository
+    }
+
+    public func loadNotes() -> [CheatSheetNote] {
+        let context = ModelContext(container)
+
+        do {
+            let persistedNotes = try context.fetch(Self.notesDescriptor)
+            let notes = persistedNotes.map(\.note)
+
+            if notes.isEmpty, let legacyNotes = legacyRepository?.loadNotes() {
+                saveNotes(legacyNotes)
+                return legacyNotes
+            }
+
+            return notes.isEmpty ? CheatSheetNote.starterNotes : notes
+        } catch {
+            return legacyRepository?.loadNotes() ?? CheatSheetNote.starterNotes
+        }
+    }
+
+    public func saveNotes(_ notes: [CheatSheetNote]) {
+        let context = ModelContext(container)
+
+        do {
+            let existingNotes = try context.fetch(Self.notesDescriptor)
+            var existingNotesByID: [UUID: PersistedCheatSheetNote] = [:]
+            var duplicateExistingNotes: [PersistedCheatSheetNote] = []
+
+            for persistedNote in existingNotes {
+                if existingNotesByID[persistedNote.id] == nil {
+                    existingNotesByID[persistedNote.id] = persistedNote
+                } else {
+                    duplicateExistingNotes.append(persistedNote)
+                }
+            }
+
+            for (index, note) in notes.enumerated() {
+                if let persistedNote = existingNotesByID.removeValue(forKey: note.id) {
+                    persistedNote.update(with: note, sortIndex: index)
+                } else {
+                    context.insert(PersistedCheatSheetNote(note: note, sortIndex: index))
+                }
+            }
+
+            existingNotesByID.values.forEach(context.delete)
+            duplicateExistingNotes.forEach(context.delete)
+
+            try context.save()
+            legacyRepository?.saveNotes(notes)
+        } catch {
+            legacyRepository?.saveNotes(notes)
+        }
+    }
+
+    static func makeInMemoryContainer() throws -> ModelContainer {
+        let schema = Schema([PersistedCheatSheetNote.self])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        return try ModelContainer(for: schema, configurations: [configuration])
+    }
+
+    private static var notesDescriptor: FetchDescriptor<PersistedCheatSheetNote> {
+        FetchDescriptor(sortBy: [SortDescriptor(\.sortIndex)])
+    }
+
+    static func makeDefaultContainer() throws -> ModelContainer {
+        let schema = Schema([PersistedCheatSheetNote.self])
+        let configuration = ModelConfiguration(schema: schema, url: defaultStoreURL)
+        return try ModelContainer(for: schema, configurations: [configuration])
+    }
+
+    private static var defaultStoreURL: URL {
+        if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: cheatSheetAppGroupID) {
+            return containerURL.appending(path: "CheatSheet.store")
+        }
+
+        return URL.applicationSupportDirectory.appending(path: "CheatSheet.store")
+    }
+}
