@@ -7,6 +7,7 @@ The app is intentionally simple:
 - Create and edit small cheat-sheet notes.
 - Pin one note for the desktop widget.
 - Pick a note color and font style.
+- Move notes to Trash, restore them, or let them delete automatically after 30 days.
 - Store notes locally using SwiftData and app-group persistence.
 - Use Liquid Glass styling on macOS 26 with material fallbacks on macOS 15 through 25.
 

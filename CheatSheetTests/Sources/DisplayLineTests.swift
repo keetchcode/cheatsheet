@@ -28,6 +28,15 @@ struct DisplayLineTests {
         #expect(parsed.isHeading == false)
     }
 
+    @Test func parsesPlainLineAsReminderText() {
+        let parsed = "Plain lines show as simple reminder text.".parsedChecklistLine
+
+        #expect(parsed.text == "Plain lines show as simple reminder text.")
+        #expect(parsed.isTask == false)
+        #expect(parsed.isComplete == false)
+        #expect(parsed.isHeading == false)
+    }
+
     @Test func displayLinesSkipEmptyLinesAndPreserveSourceLineIDs() throws {
         let note = CheatSheetNote(
             title: "Release",

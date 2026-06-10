@@ -11,6 +11,7 @@ public struct CheatSheetNote: Codable, Identifiable, Equatable, Sendable {
     public var fontStyleRawValue: String?
     public var isPinned: Bool
     public var updatedAt: Date
+    public var archivedAt: Date?
 
     public init(
         id: UUID = UUID(),
@@ -19,7 +20,8 @@ public struct CheatSheetNote: Codable, Identifiable, Equatable, Sendable {
         tintHex: String = "4B88FF",
         fontStyle: CheatSheetFontStyle = .monospaced,
         isPinned: Bool = false,
-        updatedAt: Date = .now
+        updatedAt: Date = .now,
+        archivedAt: Date? = nil
     ) {
         self.id = id
         self.title = title
@@ -28,6 +30,7 @@ public struct CheatSheetNote: Codable, Identifiable, Equatable, Sendable {
         self.fontStyleRawValue = fontStyle.rawValue
         self.isPinned = isPinned
         self.updatedAt = updatedAt
+        self.archivedAt = archivedAt
     }
 
     public var displayTitle: String {
@@ -48,10 +51,30 @@ public struct CheatSheetNote: Codable, Identifiable, Equatable, Sendable {
             fontStyleRawValue = newValue.rawValue
         }
     }
+
+    public var isArchived: Bool {
+        archivedAt != nil
+    }
 }
 
 public extension CheatSheetNote {
     static let starterNotes: [CheatSheetNote] = [
+        CheatSheetNote(
+            title: "Widget Formatting Demo",
+            body: """
+            # Widget Formatting Demo
+            Plain lines show as simple reminder text.
+            - Bullets become quick checklist rows.
+            - [ ] Open tasks use an empty circle.
+            - [x] Finished tasks use a checkmark.
+            # Tips
+            - Pin one note to show it in the widget.
+            - Pick a color and font above the editor.
+            - Short lines read best on the desktop.
+            """,
+            tintHex: CheatSheetPalette.indigo.rawValue,
+            isPinned: true
+        ),
         CheatSheetNote(
             title: "Git Flow",
             body: """
@@ -61,22 +84,8 @@ public extension CheatSheetNote {
             - git add .
             - git commit -m "Describe change"
             - git push -u origin HEAD
-            - gh pr create --draft
             """,
-            tintHex: "4B88FF",
-            isPinned: true
-        ),
-        CheatSheetNote(
-            title: "SwiftUI Checks",
-            body: """
-            # SwiftUI Checks
-            - Keep @State private
-            - Use stable ForEach identity
-            - Use Button for click targets
-            - Add accessibility labels
-            - Run build before handoff
-            """,
-            tintHex: "45C7C4"
+            tintHex: CheatSheetPalette.cyan.rawValue
         )
     ]
 }
@@ -86,6 +95,11 @@ public enum CheatSheetPalette: String, CaseIterable, Identifiable, Sendable {
     case cyan = "45C7C4"
     case violet = "8B7CFF"
     case mint = "59C979"
+    case lime = "8FBF3F"
+    case amber = "D99A2B"
+    case coral = "E86F51"
+    case rose = "E85D75"
+    case indigo = "5D6BFF"
     case graphite = "5C6470"
 
     public var id: String { rawValue }
@@ -100,6 +114,11 @@ public enum CheatSheetPalette: String, CaseIterable, Identifiable, Sendable {
         case .cyan: "Cyan"
         case .violet: "Violet"
         case .mint: "Mint"
+        case .lime: "Lime"
+        case .amber: "Amber"
+        case .coral: "Coral"
+        case .rose: "Rose"
+        case .indigo: "Indigo"
         case .graphite: "Graphite"
         }
     }

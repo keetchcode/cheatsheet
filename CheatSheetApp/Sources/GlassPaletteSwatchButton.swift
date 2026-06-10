@@ -10,7 +10,7 @@ struct GlassPaletteSwatchButton: View {
         Button(action: action) {
             Circle()
                 .fill(swatch.color)
-                .frame(width: 22, height: 22)
+                .frame(width: 16, height: 16)
                 .overlay {
                     selectedIndicator
                 }
@@ -20,7 +20,7 @@ struct GlassPaletteSwatchButton: View {
                 }
         }
         .buttonStyle(.plain)
-        .frame(width: AppDesign.minimumHitSize, height: AppDesign.minimumHitSize)
+        .frame(width: 26, height: 26)
         .contentShape(Rectangle())
         .accessibilityLabel("\(swatch.displayName) note color")
         .accessibilityValue(isSelected ? "Selected" : "Not selected")

@@ -16,7 +16,12 @@ struct SidebarNoteRow: View {
                         .font(.callout)
                         .lineLimit(1)
 
-                    if note.isPinned {
+                    if note.isArchived {
+                        Image(systemName: "archivebox.fill")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel("In Trash")
+                    } else if note.isPinned {
                         Image(systemName: "pin.fill")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -24,7 +29,7 @@ struct SidebarNoteRow: View {
                     }
                 }
 
-                Text(note.body.notePreviewLine)
+                Text(note.isArchived ? note.trashStatusText : note.body.notePreviewLine)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

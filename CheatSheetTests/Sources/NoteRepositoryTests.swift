@@ -26,13 +26,26 @@ struct NoteRepositoryTests {
                 body: "- xcodebuild",
                 tintHex: CheatSheetPalette.mint.rawValue,
                 isPinned: true,
-                updatedAt: Date(timeIntervalSince1970: 10)
+                updatedAt: Date(timeIntervalSince1970: 10),
+                archivedAt: Date(timeIntervalSince1970: 20)
             )
         ]
 
         sut.saveNotes(notes)
 
         #expect(sut.loadNotes() == notes)
+    }
+
+    @Test func savedEmptyNotesLoadsAsEmptyCollection() throws {
+        let suite = "CheatSheetTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let sut = UserDefaultsCheatSheetNoteRepository(defaults: defaults)
+
+        sut.saveNotes([])
+
+        #expect(sut.loadNotes().isEmpty)
     }
 
     @Test func invalidStoredDataFallsBackToStarterNotes() throws {
@@ -63,7 +76,8 @@ struct NoteRepositoryTests {
                 body: "- second",
                 tintHex: CheatSheetPalette.mint.rawValue,
                 isPinned: true,
-                updatedAt: Date(timeIntervalSince1970: 2)
+                updatedAt: Date(timeIntervalSince1970: 2),
+                archivedAt: Date(timeIntervalSince1970: 3)
             )
         ]
 

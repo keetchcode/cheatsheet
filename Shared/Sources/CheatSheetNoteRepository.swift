@@ -24,7 +24,7 @@ public struct UserDefaultsCheatSheetNoteRepository: CheatSheetNoteRepository {
 
         do {
             let notes = try JSONDecoder().decode([CheatSheetNote].self, from: data)
-            return notes.isEmpty ? CheatSheetNote.starterNotes : notes
+            return notes
         } catch {
             return CheatSheetNote.starterNotes
         }

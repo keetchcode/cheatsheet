@@ -5,18 +5,36 @@ struct GlassPalettePicker: View {
     var onSelection: () -> Void = {}
 
     var body: some View {
-        HStack(spacing: 8) {
-            ForEach(CheatSheetPalette.allCases) { swatch in
-                GlassPaletteSwatchButton(
-                    swatch: swatch,
-                    isSelected: selection == swatch.rawValue
-                ) {
-                    selection = swatch.rawValue
-                    onSelection()
-                }
+        ViewThatFits(in: .horizontal) {
+            swatchRow
+
+            LazyVGrid(columns: compactColumns, alignment: .leading, spacing: 4) {
+                swatches
+            }
+            .fixedSize()
+        }
+    }
+
+    private var swatchRow: some View {
+        HStack(spacing: 6) {
+            swatches
+        }
+        .fixedSize()
+    }
+
+    private var compactColumns: [GridItem] {
+        Array(repeating: GridItem(.fixed(26), spacing: 6), count: 5)
+    }
+
+    private var swatches: some View {
+        ForEach(CheatSheetPalette.allCases) { swatch in
+            GlassPaletteSwatchButton(
+                swatch: swatch,
+                isSelected: selection == swatch.rawValue
+            ) {
+                selection = swatch.rawValue
+                onSelection()
             }
         }
-        .padding(8)
-        .background(.regularMaterial, in: .rect(cornerRadius: 12))
     }
 }

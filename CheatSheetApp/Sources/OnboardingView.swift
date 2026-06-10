@@ -41,7 +41,7 @@ struct OnboardingView: View {
                             OnboardingStepRow(
                                 symbol: "paintpalette",
                                 title: "Tune the look",
-                                description: "Pick a color or font in the Look panel and the note preview updates immediately."
+                                description: "Pick a color or font above the editor and the widget follows that style."
                             )
 
                             OnboardingStepRow(

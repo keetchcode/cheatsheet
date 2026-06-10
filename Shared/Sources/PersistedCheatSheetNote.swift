@@ -10,6 +10,7 @@ final class PersistedCheatSheetNote {
     var fontStyleRawValue: String?
     var isPinned: Bool
     var updatedAt: Date
+    var archivedAt: Date?
     var sortIndex: Int
 
     init(note: CheatSheetNote, sortIndex: Int) {
@@ -20,6 +21,7 @@ final class PersistedCheatSheetNote {
         fontStyleRawValue = note.fontStyleRawValue
         isPinned = note.isPinned
         updatedAt = note.updatedAt
+        archivedAt = note.archivedAt
         self.sortIndex = sortIndex
     }
 
@@ -30,6 +32,7 @@ final class PersistedCheatSheetNote {
         fontStyleRawValue = note.fontStyleRawValue
         isPinned = note.isPinned
         updatedAt = note.updatedAt
+        archivedAt = note.archivedAt
         self.sortIndex = sortIndex
     }
 
@@ -41,7 +44,8 @@ final class PersistedCheatSheetNote {
             tintHex: tintHex,
             fontStyle: CheatSheetFontStyle(rawValue: fontStyleRawValue ?? "") ?? .monospaced,
             isPinned: isPinned,
-            updatedAt: updatedAt
+            updatedAt: updatedAt,
+            archivedAt: archivedAt
         )
     }
 }

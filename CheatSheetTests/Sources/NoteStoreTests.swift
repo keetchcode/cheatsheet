@@ -30,14 +30,37 @@ struct NoteStoreTests {
         #expect(sut.selectedNoteID == sut.notes.first?.id)
     }
 
-    @Test func deleteSelectedNoteKeepsAtLeastOneNote() {
+    @Test func archiveSelectedNoteMovesItToTrashAndSelectsNextActiveNote() throws {
+        let firstID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000601"))
+        let secondID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000602"))
+        let archiveDate = Date(timeIntervalSince1970: 100)
+        let repository = SpyNoteRepository(
+            loadedNotes: [
+                Self.sampleNote(id: firstID, title: "First", isPinned: true),
+                Self.sampleNote(id: secondID, title: "Second")
+            ]
+        )
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {}, now: { archiveDate })
+
+        sut.archiveSelectedNote()
+
+        let archivedNote = try #require(sut.notes.first { $0.id == firstID })
+        #expect(archivedNote.archivedAt == archiveDate)
+        #expect(archivedNote.isPinned == false)
+        #expect(sut.activeNotes.map(\.id) == [secondID])
+        #expect(sut.archivedNotes.map(\.id) == [firstID])
+        #expect(sut.selectedNoteID == secondID)
+    }
+
+    @Test func archiveAllowsAllActiveNotesToMoveToTrash() {
         let first = Self.sampleNote(title: "First")
         let repository = SpyNoteRepository(loadedNotes: [first])
         let sut = NoteStore(repository: repository, reloadWidgetTimelines: {})
 
-        sut.deleteSelectedNote()
+        sut.archiveSelectedNote()
 
-        #expect(sut.notes == [first])
+        #expect(sut.activeNotes.isEmpty)
+        #expect(sut.archivedNotes.count == 1)
         #expect(sut.selectedNoteID == first.id)
     }
 
@@ -96,8 +119,138 @@ struct NoteStoreTests {
 
         binding.wrappedValue = updated
 
-        #expect(sut.sortedNotes.map(\.id) == [firstID, secondID])
+        #expect(sut.activeNotes.map(\.id) == [firstID, secondID])
         #expect(sut.notes.first { $0.id == secondID }?.body == "- edited second")
+    }
+
+    @Test func restoreArchivedNoteReturnsItToActiveNotes() throws {
+        let noteID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000701"))
+        let restoreDate = Date(timeIntervalSince1970: 200)
+        let repository = SpyNoteRepository(
+            loadedNotes: [
+                Self.sampleNote(id: noteID, title: "Archived", archivedAt: Date(timeIntervalSince1970: 100))
+            ]
+        )
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {}, now: { restoreDate })
+
+        sut.restoreArchivedNote(noteID)
+
+        #expect(sut.notes.first { $0.id == noteID }?.archivedAt == nil)
+        #expect(sut.notes.first { $0.id == noteID }?.updatedAt == restoreDate)
+        #expect(sut.activeNotes.map(\.id) == [noteID])
+        #expect(sut.selectedNoteID == noteID)
+    }
+
+    @Test func bindingIsUnavailableForArchivedNotes() throws {
+        let noteID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000901"))
+        let currentDate = Date(timeIntervalSince1970: 200)
+        let repository = SpyNoteRepository(
+            loadedNotes: [
+                Self.sampleNote(id: noteID, title: "Archived", archivedAt: Date(timeIntervalSince1970: 100))
+            ]
+        )
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {}, now: { currentDate })
+
+        #expect(sut.binding(for: noteID) == nil)
+    }
+
+    @Test func initialSelectionFallsBackToArchivedNoteWhenNoActiveNotesRemain() throws {
+        let noteID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000902"))
+        let currentDate = Date(timeIntervalSince1970: 200)
+        let repository = SpyNoteRepository(
+            loadedNotes: [
+                Self.sampleNote(id: noteID, title: "Archived", archivedAt: Date(timeIntervalSince1970: 100))
+            ]
+        )
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {}, now: { currentDate })
+
+        #expect(sut.selectedNoteID == noteID)
+    }
+
+    @Test func leaveTrashSelectsFirstActiveNote() throws {
+        let activeID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000903"))
+        let archivedID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000904"))
+        let repository = SpyNoteRepository(
+            loadedNotes: [
+                Self.sampleNote(id: activeID, title: "Active"),
+                Self.sampleNote(id: archivedID, title: "Archived", archivedAt: Date(timeIntervalSince1970: 100))
+            ]
+        )
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {})
+        sut.selectedNoteID = archivedID
+
+        sut.leaveTrash()
+
+        #expect(sut.selectedNoteID == activeID)
+    }
+
+    @Test func enterTrashSelectsMostRecentlyArchivedNote() throws {
+        let activeID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000905"))
+        let olderArchivedID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000906"))
+        let recentArchivedID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000907"))
+        let currentDate = Date(timeIntervalSince1970: 250)
+        let repository = SpyNoteRepository(
+            loadedNotes: [
+                Self.sampleNote(id: activeID, title: "Active"),
+                Self.sampleNote(id: olderArchivedID, title: "Older", archivedAt: Date(timeIntervalSince1970: 100)),
+                Self.sampleNote(id: recentArchivedID, title: "Recent", archivedAt: Date(timeIntervalSince1970: 200))
+            ]
+        )
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {}, now: { currentDate })
+        sut.selectedNoteID = activeID
+
+        sut.enterTrash()
+
+        #expect(sut.selectedNoteID == recentArchivedID)
+    }
+
+    @Test func leaveTrashCreatesNoteWhenNoActiveNotesExist() {
+        let repository = SpyNoteRepository(
+            loadedNotes: [
+                Self.sampleNote(title: "Archived", archivedAt: Date(timeIntervalSince1970: 100))
+            ]
+        )
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {})
+
+        sut.leaveTrash()
+
+        #expect(sut.activeNotes.count == 1)
+        #expect(sut.selectedNoteID == sut.activeNotes.first?.id)
+        #expect(sut.selectedNote?.title == "New Cheat Sheet")
+    }
+
+    @Test func leaveTrashCanSkipCreatingNoteWhenCallerWillCreateOne() {
+        let currentDate = Date(timeIntervalSince1970: 200)
+        let repository = SpyNoteRepository(
+            loadedNotes: [
+                Self.sampleNote(title: "Archived", archivedAt: Date(timeIntervalSince1970: 100))
+            ]
+        )
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {}, now: { currentDate })
+
+        sut.leaveTrash(createNoteIfNeeded: false)
+
+        #expect(sut.activeNotes.isEmpty)
+        #expect(sut.archivedNotes.count == 1)
+    }
+
+    @Test func expiredArchivedNotesAreRemovedOnStartup() throws {
+        let activeID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000801"))
+        let expiredID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000802"))
+        let freshID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000803"))
+        let currentDate = Date(timeIntervalSince1970: 60 * 24 * 60 * 60)
+        let repository = SpyNoteRepository(
+            loadedNotes: [
+                Self.sampleNote(id: activeID, title: "Active"),
+                Self.sampleNote(id: expiredID, title: "Expired", archivedAt: currentDate.addingTimeInterval(-31 * 24 * 60 * 60)),
+                Self.sampleNote(id: freshID, title: "Fresh", archivedAt: currentDate.addingTimeInterval(-2 * 24 * 60 * 60))
+            ]
+        )
+
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {}, now: { currentDate })
+
+        #expect(sut.notes.map(\.id) == [activeID, freshID])
+        #expect(repository.savedNotes.last?.map(\.id) == [activeID, freshID])
     }
 
     @Test func flushPendingChangesSavesAndReloadsWidget() {
@@ -143,14 +296,16 @@ struct NoteStoreTests {
     private static func sampleNote(
         id: UUID = UUID(),
         title: String,
-        isPinned: Bool = false
+        isPinned: Bool = false,
+        archivedAt: Date? = nil
     ) -> CheatSheetNote {
         CheatSheetNote(
             id: id,
             title: title,
             body: "- \(title)",
             isPinned: isPinned,
-            updatedAt: Date(timeIntervalSince1970: 1)
+            updatedAt: Date(timeIntervalSince1970: 1),
+            archivedAt: archivedAt
         )
     }
 }

@@ -6,30 +6,21 @@ struct ContentView: View {
     @AppStorage("showWidgetHints") private var showWidgetHints = true
     @State private var store = NoteStore()
     @State private var isShowingOnboarding = false
+    @State private var isShowingTrash = false
 
     var body: some View {
         NavigationSplitView {
-            SidebarView(store: store)
+            SidebarView(store: store, isShowingTrash: isShowingTrash)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 320)
         } detail: {
-            if let selectedNoteID = store.selectedNoteID,
-               let note = store.binding(for: selectedNoteID) {
-                VStack(alignment: .leading, spacing: AppDesign.panelSpacing) {
-                    if showWidgetHints, !note.wrappedValue.isPinned {
-                        widgetSetupHint {
-                            store.setPinned(selectedNoteID)
-                        }
-                    }
-
-                    EditorView(note: note) {
-                        store.setPinned(selectedNoteID)
-                    } deleteAction: {
-                        store.deleteSelectedNote()
-                    }
-                }
-                .padding(AppDesign.windowPadding)
+            if isShowingTrash {
+                trashDetail
+            } else if let selectedNoteID = store.selectedNoteID,
+                      let note = store.binding(for: selectedNoteID) {
+                editorDetail(note: note, selectedNoteID: selectedNoteID)
             } else {
                 EmptyStateView {
+                    showNotes(createNoteIfNeeded: false)
                     store.addNote()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -40,6 +31,7 @@ struct ContentView: View {
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button {
+                    showNotes(createNoteIfNeeded: false)
                     store.addNote()
                 } label: {
                     Label("New Note", systemImage: "plus")
@@ -47,11 +39,19 @@ struct ContentView: View {
                 .keyboardShortcut("n")
 
                 Button(role: .destructive) {
-                    store.deleteSelectedNote()
+                    store.archiveSelectedNote()
                 } label: {
-                    Label("Delete Note", systemImage: "trash")
+                    Label("Move to Trash", systemImage: "trash")
                 }
-                .disabled(store.notes.count <= 1)
+                .help("Move the selected note to Trash for 30 days")
+                .disabled(store.selectedNote?.isArchived ?? true)
+
+                Button {
+                    isShowingTrash ? showNotes() : showTrash()
+                } label: {
+                    Label(isShowingTrash ? "Show Notes" : "Show Trash", systemImage: isShowingTrash ? "note.text" : "archivebox")
+                }
+                .help(isShowingTrash ? "Show Notes" : "Show Trash")
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -64,6 +64,59 @@ struct ContentView: View {
         .sheet(isPresented: $isShowingOnboarding) {
             OnboardingView()
         }
+    }
+
+    @ViewBuilder
+    private var trashDetail: some View {
+        if let selectedNote = store.selectedNote, selectedNote.isArchived {
+            TrashNoteView(note: selectedNote) {
+                showNotes()
+            } restoreAction: {
+                store.restoreArchivedNote(selectedNote.id)
+                showNotes()
+            } deleteNowAction: {
+                store.permanentlyDeleteArchivedNote(selectedNote.id)
+            }
+            .padding(AppDesign.windowPadding)
+        } else {
+            VStack(spacing: 12) {
+                Image(systemName: "archivebox")
+                    .font(.system(size: 36, weight: .semibold))
+                    .foregroundStyle(.secondary)
+
+                Text("Trash is empty")
+                    .font(.title3.weight(.semibold))
+            }
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private func editorDetail(note: Binding<CheatSheetNote>, selectedNoteID: CheatSheetNote.ID) -> some View {
+        VStack(alignment: .leading, spacing: AppDesign.panelSpacing) {
+            if showWidgetHints, !note.wrappedValue.isPinned {
+                widgetSetupHint {
+                    store.setPinned(selectedNoteID)
+                }
+            }
+
+            EditorView(note: note) {
+                store.setPinned(selectedNoteID)
+            }
+        }
+        .padding(AppDesign.windowPadding)
+    }
+
+    private func showTrash() {
+        store.searchText = ""
+        store.enterTrash()
+        isShowingTrash = true
+    }
+
+    private func showNotes(createNoteIfNeeded: Bool = true) {
+        store.searchText = ""
+        isShowingTrash = false
+        store.leaveTrash(createNoteIfNeeded: createNoteIfNeeded)
     }
 
     private func widgetSetupHint(pinAction: @escaping () -> Void) -> some View {
