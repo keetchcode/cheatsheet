@@ -4,6 +4,8 @@ CheatSheet is a small open source macOS app for keeping short coding notes, chec
 
 ## Screenshots
 
+![CheatSheet desktop with widget and pinned note](Docs/Images/cheatsheet-desktop-overview.png)
+
 ![CheatSheet editor with note list, color controls, font picker, and pinned note state](Docs/Images/cheatsheet-editor.png)
 
 ![CheatSheet onboarding with widget setup guidance](Docs/Images/cheatsheet-onboarding.png)
