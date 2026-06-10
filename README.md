@@ -2,6 +2,16 @@
 
 CheatSheet is a small open source macOS app for keeping short coding notes, checklists, and command reminders close by. It includes a desktop WidgetKit widget so one pinned note can stay visible while you work.
 
+## Screenshots
+
+![CheatSheet editor with note list, color controls, font picker, and pinned note state](Docs/Images/cheatsheet-editor.png)
+
+![CheatSheet onboarding with widget setup guidance](Docs/Images/cheatsheet-onboarding.png)
+
+![CheatSheet Trash view with back, restore, and delete actions](Docs/Images/cheatsheet-trash.png)
+
+![CheatSheet desktop widget pinned on the desktop](Docs/Images/cheatsheet-widget-desktop.png)
+
 The app is intentionally simple:
 
 - Create and edit small cheat-sheet notes.
