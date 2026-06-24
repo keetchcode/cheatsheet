@@ -160,6 +160,35 @@ struct NoteRepositoryTests {
 
         #expect(sut.loadNotes() == updatedNotes)
     }
+
+    @Test func swiftDataRepositoryDeduplicatesSavedNotesByID() throws {
+        let container = try SwiftDataCheatSheetNoteRepository.makeInMemoryContainer()
+        let legacy = SpyLegacyRepository(notes: [])
+        let sut = SwiftDataCheatSheetNoteRepository(container: container, legacyRepository: legacy)
+        let id = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000501"))
+        let duplicateNotes = [
+            CheatSheetNote(
+                id: id,
+                title: "Original",
+                body: "- original",
+                updatedAt: Date(timeIntervalSince1970: 1)
+            ),
+            CheatSheetNote(
+                id: id,
+                title: "Updated",
+                body: "- updated",
+                tintHex: CheatSheetPalette.mint.rawValue,
+                isPinned: true,
+                updatedAt: Date(timeIntervalSince1970: 2)
+            )
+        ]
+        let expectedNotes = [duplicateNotes[1]]
+
+        sut.saveNotes(duplicateNotes)
+
+        #expect(sut.loadNotes() == expectedNotes)
+        #expect(legacy.savedNotes.last == expectedNotes)
+    }
 }
 
 private final class SpyLegacyRepository: CheatSheetNoteRepository {

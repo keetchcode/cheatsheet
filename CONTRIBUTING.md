@@ -18,14 +18,18 @@ xcodegen generate
 4. Open `CheatSheet.xcodeproj` or build from the command line.
 
 ```sh
-xcodebuild -project CheatSheet.xcodeproj -scheme CheatSheet -destination 'platform=macOS' -derivedDataPath .derivedData CODE_SIGNING_ALLOWED=NO build
+Scripts/verify-macos.sh
 ```
 
 ## Running Tests
 
 ```sh
-xcodebuild -project CheatSheet.xcodeproj -scheme CheatSheet -destination 'platform=macOS' -derivedDataPath .derivedData CODE_SIGNING_ALLOWED=NO test
+Scripts/verify-macos.sh
 ```
+
+The script generates its project and DerivedData under `/private/tmp`. This avoids
+`NSFileCoordinator` hangs when a checkout lives in a File Provider-managed
+Documents folder.
 
 If you are only changing shared parsing or model code, add or update focused tests in `CheatSheetTests`.
 

@@ -29,7 +29,7 @@ final class NoteStore {
     private var saveTask: Task<Void, Never>?
 
     init(
-        repository: any CheatSheetNoteRepository = UserDefaultsCheatSheetNoteRepository(),
+        repository: any CheatSheetNoteRepository = CheatSheetNoteRepositoryFactory.live(),
         reloadWidgetTimelines: @escaping () -> Void = { WidgetCenter.shared.reloadAllTimelines() },
         now: @escaping () -> Date = Date.init
     ) {
@@ -205,7 +205,7 @@ final class NoteStore {
     }
 
     private static func widgetNote(in notes: [CheatSheetNote]) -> CheatSheetNote? {
-        notes.first { $0.isPinned && !$0.isArchived } ?? notes.first { !$0.isArchived }
+        notes.widgetDisplayNote
     }
 
     private static func sorted(_ notes: [CheatSheetNote]) -> [CheatSheetNote] {

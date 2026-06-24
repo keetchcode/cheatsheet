@@ -46,6 +46,7 @@ public final class SwiftDataCheatSheetNoteRepository: CheatSheetNoteRepository {
 
     public func saveNotes(_ notes: [CheatSheetNote]) {
         let context = ModelContext(container)
+        let notes = Self.uniqueNotesPreservingLastOccurrence(notes)
 
         do {
             let existingNotes = try context.fetch(Self.notesDescriptor)
@@ -76,6 +77,17 @@ public final class SwiftDataCheatSheetNoteRepository: CheatSheetNoteRepository {
         } catch {
             legacyRepository?.saveNotes(notes)
         }
+    }
+
+    private static func uniqueNotesPreservingLastOccurrence(_ notes: [CheatSheetNote]) -> [CheatSheetNote] {
+        var seenIDs: Set<CheatSheetNote.ID> = []
+        var uniqueNotes: [CheatSheetNote] = []
+
+        for note in notes.reversed() where seenIDs.insert(note.id).inserted {
+            uniqueNotes.append(note)
+        }
+
+        return uniqueNotes.reversed()
     }
 
     static func makeInMemoryContainer() throws -> ModelContainer {

@@ -52,23 +52,14 @@ struct OnboardingView: View {
                         }
                     }
 
-                    ViewThatFits(in: .horizontal) {
-                        HStack {
-                            StickyNotePreview(note: CheatSheetNote.starterNotes[0])
-                                .frame(width: 170)
+                    VStack(spacing: 18) {
+                        StickyNotePreview(note: CheatSheetNote.starterNotes[0])
+                            .frame(maxWidth: 400)
 
-                            Spacer()
-
-                            OnboardingStartButton(action: finish)
-                        }
-
-                        VStack(alignment: .leading, spacing: 18) {
-                            StickyNotePreview(note: CheatSheetNote.starterNotes[0])
-                                .frame(maxWidth: 220)
-
-                            OnboardingStartButton(action: finish)
-                        }
+                        OnboardingStartButton(action: finish)
+                            .frame(maxWidth: 260)
                     }
+                    .frame(maxWidth: .infinity)
                 }
                 .padding(28)
                 .frame(idealWidth: 560, maxWidth: 620)

@@ -15,14 +15,14 @@ struct CheatSheetProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<CheatSheetEntry>) -> Void) {
         let entry = CheatSheetEntry(date: .now, note: pinnedNote(source: "timeline"))
-        widgetLogger.info("Returning widget timeline for '\(entry.note.displayTitle, privacy: .public)'")
+        widgetLogger.info("Returning widget timeline for '\(entry.note.displayTitle, privacy: .private)'")
         completion(Timeline(entries: [entry], policy: .after(.now.addingTimeInterval(60 * 30))))
     }
 
     private func pinnedNote(source: StaticString) -> CheatSheetNote {
         let notes = UserDefaultsCheatSheetNoteRepository().loadNotes()
-        let note = notes.first(where: \.isPinned) ?? notes.first ?? CheatSheetNote.starterNotes[0]
-        widgetLogger.info("Loaded \(notes.count, privacy: .public) notes for \(source, privacy: .public); selected '\(note.displayTitle, privacy: .public)'")
+        let note = notes.widgetDisplayNote ?? CheatSheetNote.starterNotes[0]
+        widgetLogger.info("Loaded \(notes.count, privacy: .public) notes for \(source, privacy: .public); selected '\(note.displayTitle, privacy: .private)'")
         return note
     }
 }

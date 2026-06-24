@@ -3,6 +3,7 @@ import SwiftData
 
 @Model
 final class PersistedCheatSheetNote {
+    @Attribute(.unique)
     var id: UUID
     var title: String
     var body: String

@@ -58,13 +58,19 @@ xcodegen generate
 Build from the command line:
 
 ```sh
-xcodebuild -project CheatSheet.xcodeproj -scheme CheatSheet -destination 'platform=macOS' -derivedDataPath .derivedData CODE_SIGNING_ALLOWED=NO build
+Scripts/verify-macos.sh
 ```
 
-Run tests:
+This runs arm64 and x86_64 tests, then builds a universal Release app. It generates
+the Xcode project under `/private/tmp` because a checkout stored in a File
+Provider-managed Documents folder can make `xcodebuild` block in
+`NSFileCoordinator` while opening the generated project bundle.
+
+For a single local build from a checkout outside File Provider-managed storage:
 
 ```sh
-xcodebuild -project CheatSheet.xcodeproj -scheme CheatSheet -destination 'platform=macOS' -derivedDataPath .derivedData CODE_SIGNING_ALLOWED=NO test
+xcodegen generate
+xcodebuild -project CheatSheet.xcodeproj -scheme CheatSheet -destination 'platform=macOS' -derivedDataPath .derivedData CODE_SIGNING_ALLOWED=NO build
 ```
 
 ## Running The Widget

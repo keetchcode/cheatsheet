@@ -90,6 +90,12 @@ public extension CheatSheetNote {
     ]
 }
 
+public extension Array where Element == CheatSheetNote {
+    var widgetDisplayNote: CheatSheetNote? {
+        first { $0.isPinned && !$0.isArchived } ?? first { !$0.isArchived }
+    }
+}
+
 public enum CheatSheetPalette: String, CaseIterable, Identifiable, Sendable {
     case blue = "4B88FF"
     case cyan = "45C7C4"

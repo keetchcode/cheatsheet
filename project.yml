@@ -25,7 +25,7 @@ targets:
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         LSApplicationCategoryType: public.app-category.productivity
-        NSHumanReadableCopyright: ""
+        NSHumanReadableCopyright: "Copyright 2026 Wesley Keetch. All rights reserved."
     sources:
       - path: CheatSheetApp/Sources
       - path: Shared/Sources
