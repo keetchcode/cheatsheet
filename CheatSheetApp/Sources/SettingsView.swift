@@ -7,7 +7,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Toggle("Show widget setup hint", isOn: $showWidgetHints)
-            Text("Pin a note in the main window, then add the CheatSheet widget from macOS widgets.")
+            Text("100% free and open source. Pin a note in the main window, then add the CheatSheet widget from macOS widgets.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 

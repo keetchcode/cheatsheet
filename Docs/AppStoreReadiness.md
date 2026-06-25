@@ -14,10 +14,11 @@ Updated: June 21, 2026
 
 Verified from the repository:
 
-- Main bundle ID: `com.wesleykeetch.CheatSheet`.
-- Widget bundle ID: `com.wesleykeetch.CheatSheet.widgets`.
+- Main bundle ID: `com.wesleykeetch.wesleycheatsheet`.
+- Widget bundle ID: `com.wesleykeetch.wesleycheatsheet.widgets`.
+- App Store Connect app name: `Liquid Glass: CheatSheet`.
 - Team ID: `HD39MR492X`.
-- Shared App Group: `HD39MR492X.com.wesleykeetch.CheatSheet`.
+- Shared App Group: `HD39MR492X.com.wesleykeetch.wesleycheatsheet`.
 - App and widget both enable App Sandbox and the same App Group.
 - Swift language mode is 6.0; minimum macOS is 15.0.
 - App category is Productivity.
@@ -48,9 +49,9 @@ Release blockers or required decisions:
 
 ### Identifiers and Signing
 
-- Apple Developer portal: create or verify explicit App IDs for `com.wesleykeetch.CheatSheet` and `com.wesleykeetch.CheatSheet.widgets`.
-- Enable App Groups on both identifiers and attach `HD39MR492X.com.wesleykeetch.CheatSheet` to both.
-- App Store Connect: create the macOS app record with the exact main bundle ID and SKU; bundle IDs cannot be corrected after a build is attached.
+- Apple Developer portal: create or verify explicit App IDs for `com.wesleykeetch.wesleycheatsheet` and `com.wesleykeetch.wesleycheatsheet.widgets`.
+- Enable App Groups on both identifiers and attach `HD39MR492X.com.wesleykeetch.wesleycheatsheet` to both.
+- App Store Connect: create the macOS app record as `Liquid Glass: CheatSheet` with the exact main bundle ID and SKU; bundle IDs cannot be corrected after a build is attached.
 - Archive inspection must show the widget nested at `CheatSheet.app/Contents/PlugIns/CheatSheetWidgets.appex`, with the extension bundle ID and versions matching the parent.
 
 ### Info.plist and Assets
@@ -177,7 +178,7 @@ lipo -info /private/tmp/CheatSheet.xcarchive/Products/Applications/CheatSheet.ap
 
 - Upload 1-10 Mac screenshots at one accepted 16:10 size: 1280x800, 1440x900, 2560x1600, or 2880x1800. Prefer 2880x1800 and show only shipping UI.
 - Recommended order: editor/sidebar, desktop widget, checklist workflow, palette/font controls, and Trash restore. Keep claims literal and ensure screenshot text is readable.
-- Complete description, keywords, support URL, privacy-policy URL, copyright, category, pricing, territories, release method, and review contact.
+- Complete app name (`Liquid Glass: CheatSheet`), description, keywords, support URL, privacy-policy URL, copyright, category, pricing, territories, release method, and review contact.
 - Complete the age-rating questionnaire based on the app itself, not arbitrary user-authored notes; do not select Kids Category.
 - Review notes: explain that no account is required and provide exact widget steps: launch, create/select a note, choose **Use in Widget**, then add CheatSheet from the macOS widget gallery.
 

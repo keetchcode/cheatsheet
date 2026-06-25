@@ -9,7 +9,7 @@ struct CheatSheetWidget: Widget {
             CheatSheetWidgetView(entry: entry)
         }
         .configurationDisplayName("CheatSheet")
-        .description("Keep a pinned coding note on your desktop.")
+        .description("100% free and open source. Keep a pinned coding note on your desktop.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }

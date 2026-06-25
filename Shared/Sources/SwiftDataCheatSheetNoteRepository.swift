@@ -108,9 +108,9 @@ public final class SwiftDataCheatSheetNoteRepository: CheatSheetNoteRepository {
 
     private static var defaultStoreURL: URL {
         if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: cheatSheetAppGroupID) {
-            return containerURL.appending(path: "CheatSheet.store")
+            return containerURL.appending(path: "wesleycheatsheet.store")
         }
 
-        return URL.applicationSupportDirectory.appending(path: "CheatSheet.store")
+        return URL.applicationSupportDirectory.appending(path: "wesleycheatsheet.store")
     }
 }

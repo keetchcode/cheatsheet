@@ -11,7 +11,8 @@ settings:
     GENERATE_INFOPLIST_FILE: YES
     ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     MARKETING_VERSION: "1.1"
-    CURRENT_PROJECT_VERSION: "3"
+    CURRENT_PROJECT_VERSION: "7"
+    VERSIONING_SYSTEM: apple-generic
 targets:
   CheatSheet:
     type: application
@@ -39,10 +40,11 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.application-groups:
-          - HD39MR492X.com.wesleykeetch.CheatSheet
+          - HD39MR492X.com.wesleykeetch.wesleycheatsheet
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.CheatSheet
+        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.wesleycheatsheet
+        PRODUCT_NAME: wesleycheatsheet
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_ENTITLEMENTS: CheatSheetApp/CheatSheet.entitlements
         CODE_SIGN_STYLE: Automatic
@@ -70,10 +72,11 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.application-groups:
-          - HD39MR492X.com.wesleykeetch.CheatSheet
+          - HD39MR492X.com.wesleykeetch.wesleycheatsheet
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.CheatSheet.widgets
+        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.wesleycheatsheet.widgets
+        PRODUCT_NAME: wesleycheatsheetWidgets
         CODE_SIGN_ENTITLEMENTS: CheatSheetWidgets/CheatSheetWidgets.entitlements
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: HD39MR492X
@@ -86,7 +89,7 @@ targets:
       - path: CheatSheetApp/Sources/NoteStore.swift
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.CheatSheetTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.wesleycheatsheet.tests
 schemes:
   CheatSheet:
     build:
@@ -99,6 +102,13 @@ schemes:
         - CheatSheetTests
     run:
       config: Debug
+    archive:
+      config: Release
+      preActions:
+        - name: Increment Build Number
+          settingsTarget: CheatSheet
+          script: |
+            "$SRCROOT/Scripts/increment-build-number.sh"
   CheatSheetApp:
     build:
       targets:
@@ -106,3 +116,10 @@ schemes:
         CheatSheetWidgets: all
     run:
       config: Debug
+    archive:
+      config: Release
+      preActions:
+        - name: Increment Build Number
+          settingsTarget: CheatSheet
+          script: |
+            "$SRCROOT/Scripts/increment-build-number.sh"

@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-public let cheatSheetAppGroupID = "HD39MR492X.com.wesleykeetch.CheatSheet"
+public let cheatSheetAppGroupID = "HD39MR492X.com.wesleykeetch.wesleycheatsheet"
 
 public struct CheatSheetNote: Codable, Identifiable, Equatable, Sendable {
     public var id: UUID

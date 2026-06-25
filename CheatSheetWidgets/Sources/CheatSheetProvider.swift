@@ -1,7 +1,7 @@
 import OSLog
 import WidgetKit
 
-private let widgetLogger = Logger(subsystem: "com.wesleykeetch.CheatSheet.widgets", category: "Timeline")
+private let widgetLogger = Logger(subsystem: "com.wesleykeetch.wesleycheatsheet.widgets", category: "Timeline")
 
 struct CheatSheetProvider: TimelineProvider {
     func placeholder(in context: Context) -> CheatSheetEntry {

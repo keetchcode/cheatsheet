@@ -1,6 +1,6 @@
 # CheatSheet
 
-CheatSheet is a small open source macOS app for keeping short coding notes, checklists, and command reminders close by. It includes a desktop WidgetKit widget so one pinned note can stay visible while you work.
+CheatSheet is a **100% free and open source** macOS app for keeping short coding notes, checklists, and command reminders close by. It includes a desktop WidgetKit widget so one pinned note can stay visible while you work.
 
 ## Screenshots
 
@@ -80,7 +80,7 @@ xcodebuild -project CheatSheet.xcodeproj -scheme CheatSheet -destination 'platfo
 The app and widget share data through an app group. The current app group is:
 
 ```text
-HD39MR492X.com.wesleykeetch.CheatSheet
+HD39MR492X.com.wesleykeetch.wesleycheatsheet
 ```
 
 If you fork the project and want to run the widget with your own Apple Developer account, update the app group in these places:
