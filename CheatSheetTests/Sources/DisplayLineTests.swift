@@ -61,4 +61,19 @@ struct DisplayLineTests {
     @Test func previewLineFallsBackForEmptyNotes() {
         #expect("\n  \n".notePreviewLine == "Empty note")
     }
+
+    @Test func displayLinesCanStopAfterRequestedLimit() {
+        let note = CheatSheetNote(
+            title: "Limit",
+            body: """
+            # First
+            - Second
+            - Third
+            """
+        )
+
+        let lines = note.displayLines(limit: 2)
+
+        #expect(lines.map(\.text) == ["First", "Second"])
+    }
 }

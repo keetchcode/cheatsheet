@@ -26,7 +26,7 @@ struct CheatSheetWidgetView: View {
             }
 
             VStack(alignment: .leading, spacing: family.lineSpacing) {
-                ForEach(entry.note.displayLines.prefix(family.lineLimit)) { line in
+                ForEach(entry.note.displayLines(limit: family.lineLimit)) { line in
                     WidgetLineView(line: line, fontStyle: entry.note.fontStyle)
                 }
             }

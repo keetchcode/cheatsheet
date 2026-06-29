@@ -59,7 +59,7 @@ Release blockers or required decisions:
 - Keep `LSApplicationCategoryType = public.app-category.productivity`, display name, copyright, version, and build values generated from `project.yml`.
 - Do not add `NSCameraUsageDescription`, `NSMicrophoneUsageDescription`, or location usage strings: the app does not call those APIs.
 - Flatten the AppIcon images against an opaque background, then check the 16, 32, 64, 128, 256, 512, and 1024 px renditions in light and dark appearances.
-- Add a privacy manifest only if stable Xcode/Organizer validation identifies a required-reason API declaration for this macOS binary or a future SDK requires one. Do not invent API reasons.
+- Keep the app and widget privacy manifests in resources; both declare the required-reason `UserDefaults` API used for local preferences and app-group widget snapshots.
 
 ### Privacy and Permission Verification
 

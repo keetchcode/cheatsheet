@@ -10,29 +10,43 @@ public struct DisplayLine: Identifiable, Hashable, Sendable {
 
 public extension CheatSheetNote {
     var displayLines: [DisplayLine] {
-        body
+        displayLines(limit: .max)
+    }
+
+    func displayLines(limit: Int) -> [DisplayLine] {
+        guard limit > 0 else { return [] }
+
+        var lines: [DisplayLine] = []
+
+        for (index, rawLine) in body
             .split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
-            .enumerated()
-            .compactMap { index, rawLine in
-                let parsed = String(rawLine).parsedChecklistLine
-                guard !parsed.text.isEmpty else { return nil }
-                return DisplayLine(
-                    id: index,
-                    text: parsed.text,
-                    isTask: parsed.isTask,
-                    isComplete: parsed.isComplete,
-                    isHeading: parsed.isHeading
-                )
-            }
+            .enumerated() {
+            guard lines.count < limit else { break }
+            let parsed = String(rawLine).parsedChecklistLine
+            guard !parsed.text.isEmpty else { continue }
+            lines.append(DisplayLine(
+                id: index,
+                text: parsed.text,
+                isTask: parsed.isTask,
+                isComplete: parsed.isComplete,
+                isHeading: parsed.isHeading
+            ))
+        }
+
+        return lines
     }
 }
 
 public extension String {
     var notePreviewLine: String {
-        split(whereSeparator: \.isNewline)
-            .map(String.init)
-            .map { $0.parsedChecklistLine.text }
-            .first { !$0.isEmpty } ?? "Empty note"
+        for rawLine in split(whereSeparator: \.isNewline) {
+            let text = String(rawLine).parsedChecklistLine.text
+            if !text.isEmpty {
+                return text
+            }
+        }
+
+        return "Empty note"
     }
 
     var parsedChecklistLine: (text: String, isTask: Bool, isComplete: Bool, isHeading: Bool) {

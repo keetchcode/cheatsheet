@@ -29,7 +29,7 @@ struct EditorHeader: View {
     }
 
     private var statusLabel: some View {
-        Label(note.isPinned ? "Shown on desktop widget" : "Editable note", systemImage: note.isPinned ? "pin.fill" : "text.alignleft")
+        Label(note.isPinned ? "Shown in widget" : "Editable note", systemImage: note.isPinned ? "pin.fill" : "text.alignleft")
             .font(.caption)
             .foregroundStyle(.secondary)
     }
@@ -46,7 +46,7 @@ struct EditorHeader: View {
             .labelStyle(.iconOnly)
             .controlSize(.small)
             .glassCompatibleButtonStyle(prominent: note.isPinned)
-            .help(note.isPinned ? "This note appears on the desktop widget" : "Show this note on the desktop widget")
+            .help(note.isPinned ? "This note appears in the widget" : "Show this note in the widget")
             .accessibilityLabel(note.isPinned ? "Pinned to Widget" : "Use in Widget")
         }
     }

@@ -47,7 +47,7 @@ struct OnboardingView: View {
                             OnboardingStepRow(
                                 symbol: "pin.fill",
                                 title: "Pin the widget note",
-                                description: "Choose Use in Widget, then add the CheatSheet widget from macOS widgets."
+                                description: "Choose Use in Widget, then add the CheatSheet widget on supported platforms."
                             )
                         }
                     }

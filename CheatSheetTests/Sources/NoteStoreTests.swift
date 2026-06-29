@@ -23,11 +23,42 @@ struct NoteStoreTests {
         let repository = SpyNoteRepository(loadedNotes: [Self.sampleNote(title: "Existing")])
         let sut = NoteStore(repository: repository, reloadWidgetTimelines: {})
 
-        sut.addNote()
+        let noteID = sut.addNote()
 
         #expect(sut.notes.count == 2)
         #expect(sut.notes.first?.title == "New Cheat Sheet")
-        #expect(sut.selectedNoteID == sut.notes.first?.id)
+        #expect(sut.selectedNoteID == noteID)
+        #expect(sut.notes.first?.id == noteID)
+    }
+
+    @Test func addNoteSupportsCustomQuickCaptureContent() {
+        let repository = SpyNoteRepository(loadedNotes: [])
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {})
+
+        let noteID = sut.addNote(
+            title: "Docker Cleanup",
+            body: "# Docker Cleanup\n- docker system prune",
+            tintHex: CheatSheetPalette.cyan.rawValue
+        )
+
+        #expect(sut.notes.first?.id == noteID)
+        #expect(sut.notes.first?.title == "Docker Cleanup")
+        #expect(sut.notes.first?.body == "# Docker Cleanup\n- docker system prune")
+        #expect(sut.notes.first?.tintHex == CheatSheetPalette.cyan.rawValue)
+        #expect(sut.selectedNoteID == noteID)
+    }
+
+    @Test func noteWithIDReturnsMatchingNote() throws {
+        let noteID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000103"))
+        let repository = SpyNoteRepository(
+            loadedNotes: [
+                Self.sampleNote(id: noteID, title: "Find Me"),
+                Self.sampleNote(title: "Other")
+            ]
+        )
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {})
+
+        #expect(sut.note(with: noteID)?.title == "Find Me")
     }
 
     @Test func archiveSelectedNoteMovesItToTrashAndSelectsNextActiveNote() throws {

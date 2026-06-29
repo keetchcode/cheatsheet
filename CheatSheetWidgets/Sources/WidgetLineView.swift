@@ -32,7 +32,7 @@ struct WidgetLineView: View {
 
     private var textStyle: Color {
         guard renderingMode == .fullColor else {
-            return line.isComplete ? .white.opacity(0.72) : .white
+            return line.isComplete ? .white.opacity(0.9) : .white
         }
 
         return line.isComplete ? .secondary : .primary

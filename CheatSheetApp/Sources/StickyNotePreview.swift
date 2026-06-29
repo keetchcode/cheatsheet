@@ -19,7 +19,7 @@ struct StickyNotePreview: View {
             }
 
             VStack(alignment: .leading, spacing: 9) {
-                ForEach(note.displayLines.prefix(9)) { line in
+                ForEach(note.displayLines(limit: 9)) { line in
                     ChecklistLineView(
                         text: line.text,
                         isTask: line.isTask,

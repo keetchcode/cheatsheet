@@ -22,8 +22,8 @@ struct FontStylePicker: View {
         }
         .menuStyle(.button)
         .controlSize(.small)
-        .help("Choose widget font")
-        .accessibilityLabel("Widget font")
+        .help("Choose note font")
+        .accessibilityLabel("Note font")
         .accessibilityValue(selection.displayName)
     }
 }

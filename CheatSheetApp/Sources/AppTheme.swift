@@ -27,15 +27,6 @@ enum AppTheme {
         }
     }
 
-    static func sidebarBackground(for colorScheme: ColorScheme) -> Color {
-        switch colorScheme {
-        case .dark:
-            Color(red: 0.09, green: 0.11, blue: 0.15)
-        default:
-            Color(red: 0.9, green: 0.93, blue: 0.96)
-        }
-    }
-
     static func glassFallbackFill(for colorScheme: ColorScheme, tint: Color) -> some ShapeStyle {
         switch colorScheme {
         case .dark:

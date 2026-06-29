@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: com.wesleykeetch
   deploymentTarget:
     macOS: "15.0"
+    iOS: "18.0"
   createIntermediateGroups: true
 settings:
   base:
@@ -90,6 +91,49 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.wesleycheatsheet.tests
+  CheatSheetiOS:
+    type: application
+    platform: iOS
+    info:
+      path: CheatSheetApp/iOSInfo.plist
+      properties:
+        CFBundleDisplayName: CheatSheet
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSApplicationCategoryType: public.app-category.productivity
+        NSHumanReadableCopyright: "Copyright 2026 Wesley Keetch. All rights reserved."
+        UIApplicationSupportsIndirectInputEvents: true
+        UILaunchScreen:
+          UIColorName: AccentColor
+    sources:
+      - path: CheatSheetApp/Sources
+      - path: Shared/Sources
+      - path: CheatSheetApp/Resources
+        type: resources
+    entitlements:
+      path: CheatSheetApp/CheatSheet-iOS.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.wesleykeetch.wesleycheatsheet
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.wesleycheatsheet
+        PRODUCT_NAME: CheatSheet
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: CheatSheetApp/CheatSheet-iOS.entitlements
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: HD39MR492X
+        TARGETED_DEVICE_FAMILY: "1,2"
+  CheatSheetiOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: CheatSheetTests/Sources
+      - path: Shared/Sources
+      - path: CheatSheetApp/Sources/NoteStore.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.wesleycheatsheet.ios.tests
 schemes:
   CheatSheet:
     build:
@@ -121,5 +165,22 @@ schemes:
       preActions:
         - name: Increment Build Number
           settingsTarget: CheatSheet
+          script: |
+            "$SRCROOT/Scripts/increment-build-number.sh"
+  CheatSheetiOS:
+    build:
+      targets:
+        CheatSheetiOS: all
+        CheatSheetiOSTests: all
+    test:
+      targets:
+        - CheatSheetiOSTests
+    run:
+      config: Debug
+    archive:
+      config: Release
+      preActions:
+        - name: Increment Build Number
+          settingsTarget: CheatSheetiOS
           script: |
             "$SRCROOT/Scripts/increment-build-number.sh"

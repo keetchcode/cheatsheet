@@ -20,7 +20,7 @@ struct GlassPaletteSwatchButton: View {
                 }
         }
         .buttonStyle(.plain)
-        .frame(width: 26, height: 26)
+        .frame(width: hitTargetSize, height: hitTargetSize)
         .contentShape(Rectangle())
         .accessibilityLabel("\(swatch.displayName) note color")
         .accessibilityValue(isSelected ? "Selected" : "Not selected")
@@ -41,5 +41,13 @@ struct GlassPaletteSwatchButton: View {
 
     private var borderStyle: AnyShapeStyle {
         isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary.opacity(0.35))
+    }
+
+    private var hitTargetSize: CGFloat {
+        #if os(iOS)
+        AppDesign.minimumHitSize
+        #else
+        26
+        #endif
     }
 }

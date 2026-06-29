@@ -6,14 +6,16 @@ struct SidebarView: View {
     let isShowingTrash: Bool
 
     var body: some View {
+        let notes = isShowingTrash ? store.filteredArchivedNotes : store.filteredNotes
+
         List(selection: $store.selectedNoteID) {
             if isShowingTrash {
                 Section("Trash") {
-                    if store.filteredArchivedNotes.isEmpty {
+                    if notes.isEmpty {
                         Text("Trash is empty")
                             .foregroundStyle(.secondary)
                     } else {
-                        ForEach(store.filteredArchivedNotes) { note in
+                        ForEach(notes) { note in
                             SidebarNoteRow(note: note)
                                 .tag(note.id)
                         }
@@ -21,7 +23,7 @@ struct SidebarView: View {
                 }
             } else {
                 Section("Notes") {
-                    ForEach(store.filteredNotes) { note in
+                    ForEach(notes) { note in
                         SidebarNoteRow(note: note)
                             .tag(note.id)
                     }

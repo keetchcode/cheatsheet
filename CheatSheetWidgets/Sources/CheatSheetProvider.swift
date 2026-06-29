@@ -20,9 +20,8 @@ struct CheatSheetProvider: TimelineProvider {
     }
 
     private func pinnedNote(source: StaticString) -> CheatSheetNote {
-        let notes = UserDefaultsCheatSheetNoteRepository().loadNotes()
-        let note = notes.widgetDisplayNote ?? CheatSheetNote.starterNotes[0]
-        widgetLogger.info("Loaded \(notes.count, privacy: .public) notes for \(source, privacy: .public); selected '\(note.displayTitle, privacy: .private)'")
+        let note = (try? WidgetNoteSnapshotRepository.appGroup().loadNote()) ?? CheatSheetNote.starterNotes[0]
+        widgetLogger.info("Loaded widget snapshot for \(source, privacy: .public); selected '\(note.displayTitle, privacy: .private)'")
         return note
     }
 }

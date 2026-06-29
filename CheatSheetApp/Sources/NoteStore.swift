@@ -6,8 +6,14 @@ import WidgetKit
 @Observable
 @MainActor
 final class NoteStore {
-    var notes: [CheatSheetNote]
+    var notes: [CheatSheetNote] {
+        didSet {
+            rebuildNoteCaches()
+        }
+    }
     var searchText = ""
+    private(set) var activeNotes: [CheatSheetNote] = []
+    private(set) var archivedNotes: [CheatSheetNote] = []
 
     var selectedNoteID: CheatSheetNote.ID? {
         didSet {
@@ -24,6 +30,8 @@ final class NoteStore {
     @ObservationIgnored
     private let now: () -> Date
     @ObservationIgnored
+    private let persistenceWorker: NotePersistenceWorker
+    @ObservationIgnored
     private var lastReloadedWidgetNote: CheatSheetNote?
     @ObservationIgnored
     private var saveTask: Task<Void, Never>?
@@ -36,25 +44,17 @@ final class NoteStore {
         self.repository = repository
         self.reloadWidgetTimelines = reloadWidgetTimelines
         self.now = now
+        persistenceWorker = NotePersistenceWorker(repository: repository)
 
         let storedNotes = repository.loadNotes()
         notes = Self.removingExpiredArchivedNotes(from: storedNotes, now: now())
+        rebuildNoteCaches()
         selectedNoteID = activeNotes.first(where: \.isPinned)?.id ?? activeNotes.first?.id ?? archivedNotes.first?.id
         lastReloadedWidgetNote = Self.widgetNote(in: notes)
         reloadWidgetTimelines()
 
         if notes != storedNotes {
-            persistImmediately()
-        }
-    }
-
-    var activeNotes: [CheatSheetNote] {
-        Self.sorted(notes.filter { !$0.isArchived })
-    }
-
-    var archivedNotes: [CheatSheetNote] {
-        notes.filter(\.isArchived).sorted { lhs, rhs in
-            (lhs.archivedAt ?? .distantPast) > (rhs.archivedAt ?? .distantPast)
+            persist(waitForSave: true)
         }
     }
 
@@ -97,15 +97,25 @@ final class NoteStore {
         }
     }
 
-    func addNote() {
+    @discardableResult
+    func addNote(
+        title: String = "New Cheat Sheet",
+        body: String = "# New Cheat Sheet\n- ",
+        tintHex: String = CheatSheetPalette.blue.rawValue
+    ) -> CheatSheetNote.ID {
         let note = CheatSheetNote(
-            title: "New Cheat Sheet",
-            body: "# New Cheat Sheet\n- ",
-            tintHex: CheatSheetPalette.blue.rawValue
+            title: title,
+            body: body,
+            tintHex: tintHex
         )
         notes.insert(note, at: 0)
         selectedNoteID = note.id
         persistImmediately()
+        return note.id
+    }
+
+    func note(with id: CheatSheetNote.ID) -> CheatSheetNote? {
+        notes.first { $0.id == id }
     }
 
     func archiveSelectedNote() {
@@ -166,7 +176,9 @@ final class NoteStore {
     }
 
     func flushPendingChanges() {
-        persistImmediately()
+        saveTask?.cancel()
+        saveTask = nil
+        persist(waitForSave: true)
     }
 
     private func schedulePersist() {
@@ -186,13 +198,13 @@ final class NoteStore {
     private func persistImmediately() {
         saveTask?.cancel()
         saveTask = nil
-        persist()
+        persist(waitForSave: false)
     }
 
-    private func persist() {
+    private func persist(waitForSave: Bool = false) {
         purgeExpiredArchivedNotes()
         ensureSelectionIsValid()
-        repository.saveNotes(notes)
+        persistenceWorker.save(notes, waitForSave: waitForSave)
         reloadWidgetTimelinesIfNeeded(for: notes)
     }
 
@@ -218,6 +230,13 @@ final class NoteStore {
         }.map(\.element)
     }
 
+    private func rebuildNoteCaches() {
+        activeNotes = Self.sorted(notes.filter { !$0.isArchived })
+        archivedNotes = notes.filter(\.isArchived).sorted { lhs, rhs in
+            (lhs.archivedAt ?? .distantPast) > (rhs.archivedAt ?? .distantPast)
+        }
+    }
+
     private func purgeExpiredArchivedNotes() {
         let cutoff = now().addingTimeInterval(-NoteTrashPolicy.retentionInterval)
         notes.removeAll { note in
@@ -238,6 +257,27 @@ final class NoteStore {
         return notes.filter { note in
             guard let archivedAt = note.archivedAt else { return true }
             return archivedAt > cutoff
+        }
+    }
+}
+
+private final class NotePersistenceWorker: @unchecked Sendable {
+    private let repository: any CheatSheetNoteRepository
+    private let queue = DispatchQueue(label: "com.wesleykeetch.wesleycheatsheet.persistence", qos: .utility)
+
+    init(repository: any CheatSheetNoteRepository) {
+        self.repository = repository
+    }
+
+    func save(_ notes: [CheatSheetNote], waitForSave: Bool) {
+        if waitForSave {
+            queue.sync {
+                repository.saveNotes(notes)
+            }
+        } else {
+            queue.async {
+                self.repository.saveNotes(notes)
+            }
         }
     }
 }

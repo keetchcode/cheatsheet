@@ -6,10 +6,15 @@ public enum CheatSheetNoteRepositoryFactory {
         do {
             return SwiftDataCheatSheetNoteRepository(
                 container: try SwiftDataCheatSheetNoteRepository.makeDefaultContainer(),
-                legacyRepository: UserDefaultsCheatSheetNoteRepository()
+                legacyRepository: try? UserDefaultsCheatSheetNoteRepository.appGroup(),
+                widgetSnapshotRepository: try? WidgetNoteSnapshotRepository.appGroup()
             )
         } catch {
-            return UserDefaultsCheatSheetNoteRepository()
+            do {
+                return try UserDefaultsCheatSheetNoteRepository.appGroup()
+            } catch {
+                return UnavailableCheatSheetNoteRepository()
+            }
         }
     }
 }
@@ -17,13 +22,16 @@ public enum CheatSheetNoteRepositoryFactory {
 public final class SwiftDataCheatSheetNoteRepository: CheatSheetNoteRepository {
     private let container: ModelContainer
     private let legacyRepository: (any CheatSheetNoteRepository)?
+    private let widgetSnapshotRepository: WidgetNoteSnapshotRepository?
 
     init(
         container: ModelContainer,
-        legacyRepository: (any CheatSheetNoteRepository)? = nil
+        legacyRepository: (any CheatSheetNoteRepository)? = nil,
+        widgetSnapshotRepository: WidgetNoteSnapshotRepository? = nil
     ) {
         self.container = container
         self.legacyRepository = legacyRepository
+        self.widgetSnapshotRepository = widgetSnapshotRepository
     }
 
     public func loadNotes() -> [CheatSheetNote] {
@@ -73,9 +81,9 @@ public final class SwiftDataCheatSheetNoteRepository: CheatSheetNoteRepository {
             duplicateExistingNotes.forEach(context.delete)
 
             try context.save()
-            legacyRepository?.saveNotes(notes)
+            widgetSnapshotRepository?.saveNote(notes.widgetDisplayNote)
         } catch {
-            legacyRepository?.saveNotes(notes)
+            widgetSnapshotRepository?.saveNote(notes.widgetDisplayNote)
         }
     }
 
@@ -102,15 +110,15 @@ public final class SwiftDataCheatSheetNoteRepository: CheatSheetNoteRepository {
 
     static func makeDefaultContainer() throws -> ModelContainer {
         let schema = Schema([PersistedCheatSheetNote.self])
-        let configuration = ModelConfiguration(schema: schema, url: defaultStoreURL)
+        let configuration = ModelConfiguration(schema: schema, url: try defaultStoreURL())
         return try ModelContainer(for: schema, configurations: [configuration])
     }
 
-    private static var defaultStoreURL: URL {
-        if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: cheatSheetAppGroupID) {
-            return containerURL.appending(path: "wesleycheatsheet.store")
+    private static func defaultStoreURL() throws -> URL {
+        guard let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: cheatSheetAppGroupID) else {
+            throw CheatSheetStorageError.appGroupUnavailable(cheatSheetAppGroupID)
         }
 
-        return URL.applicationSupportDirectory.appending(path: "wesleycheatsheet.store")
+        return containerURL.appending(path: "wesleycheatsheet.store")
     }
 }

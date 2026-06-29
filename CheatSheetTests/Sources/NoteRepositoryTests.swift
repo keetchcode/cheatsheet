@@ -107,10 +107,18 @@ struct NoteRepositoryTests {
         #expect(sut.loadNotes() == legacy.notes)
     }
 
-    @Test func swiftDataRepositoryMirrorsSuccessfulSavesToLegacyRepository() throws {
+    @Test func swiftDataRepositorySavesWidgetSnapshotWithoutMirroringFullLegacyNotes() throws {
         let container = try SwiftDataCheatSheetNoteRepository.makeInMemoryContainer()
         let legacy = SpyLegacyRepository(notes: [])
-        let sut = SwiftDataCheatSheetNoteRepository(container: container, legacyRepository: legacy)
+        let suite = "CheatSheetTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let widgetSnapshotRepository = WidgetNoteSnapshotRepository(defaults: defaults)
+        let sut = SwiftDataCheatSheetNoteRepository(
+            container: container,
+            legacyRepository: legacy,
+            widgetSnapshotRepository: widgetSnapshotRepository
+        )
         let notes = [
             CheatSheetNote(
                 id: try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000301")),
@@ -122,7 +130,8 @@ struct NoteRepositoryTests {
 
         sut.saveNotes(notes)
 
-        #expect(legacy.savedNotes.last == notes)
+        #expect(widgetSnapshotRepository.loadNote() == notes[0])
+        #expect(legacy.savedNotes.isEmpty)
     }
 
     @Test func swiftDataRepositoryUpdatesReordersAndDeletesNotesByID() throws {
@@ -164,7 +173,15 @@ struct NoteRepositoryTests {
     @Test func swiftDataRepositoryDeduplicatesSavedNotesByID() throws {
         let container = try SwiftDataCheatSheetNoteRepository.makeInMemoryContainer()
         let legacy = SpyLegacyRepository(notes: [])
-        let sut = SwiftDataCheatSheetNoteRepository(container: container, legacyRepository: legacy)
+        let suite = "CheatSheetTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let widgetSnapshotRepository = WidgetNoteSnapshotRepository(defaults: defaults)
+        let sut = SwiftDataCheatSheetNoteRepository(
+            container: container,
+            legacyRepository: legacy,
+            widgetSnapshotRepository: widgetSnapshotRepository
+        )
         let id = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000501"))
         let duplicateNotes = [
             CheatSheetNote(
@@ -187,8 +204,10 @@ struct NoteRepositoryTests {
         sut.saveNotes(duplicateNotes)
 
         #expect(sut.loadNotes() == expectedNotes)
-        #expect(legacy.savedNotes.last == expectedNotes)
+        #expect(widgetSnapshotRepository.loadNote() == expectedNotes[0])
+        #expect(legacy.savedNotes.isEmpty)
     }
+
 }
 
 private final class SpyLegacyRepository: CheatSheetNoteRepository {

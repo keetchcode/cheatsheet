@@ -8,6 +8,7 @@ extension View {
 
     @ViewBuilder
     func glassCompatibleButtonStyle(prominent: Bool = false) -> some View {
+        #if os(macOS)
         if #available(macOS 26.0, *) {
             if prominent {
                 self.buttonStyle(.glassProminent)
@@ -19,6 +20,25 @@ extension View {
         } else {
             self.buttonStyle(.bordered)
         }
+        #elseif os(iOS)
+        if #available(iOS 26.0, *) {
+            if prominent {
+                self.buttonStyle(.glassProminent)
+            } else {
+                self.buttonStyle(.glass)
+            }
+        } else if prominent {
+            self.buttonStyle(.borderedProminent)
+        } else {
+            self.buttonStyle(.bordered)
+        }
+        #else
+        if prominent {
+            self.buttonStyle(.borderedProminent)
+        } else {
+            self.buttonStyle(.bordered)
+        }
+        #endif
     }
 }
 
@@ -29,6 +49,7 @@ private struct LiquidGlassPanelModifier: ViewModifier {
     let interactive: Bool
 
     func body(content: Content) -> some View {
+        #if os(macOS)
         if #available(macOS 26.0, *) {
             if interactive {
                 content.glassEffect(.regular.tint(tint.opacity(glassTintOpacity)).interactive(), in: .rect(cornerRadius: cornerRadius))
@@ -41,6 +62,25 @@ private struct LiquidGlassPanelModifier: ViewModifier {
                 in: RoundedRectangle(cornerRadius: cornerRadius)
             )
         }
+        #elseif os(iOS)
+        if #available(iOS 26.0, *) {
+            if interactive {
+                content.glassEffect(.regular.tint(tint.opacity(glassTintOpacity)).interactive(), in: .rect(cornerRadius: cornerRadius))
+            } else {
+                content.glassEffect(.regular.tint(tint.opacity(glassTintOpacity)), in: .rect(cornerRadius: cornerRadius))
+            }
+        } else {
+            content.background(
+                AppTheme.glassFallbackFill(for: colorScheme, tint: tint),
+                in: RoundedRectangle(cornerRadius: cornerRadius)
+            )
+        }
+        #else
+        content.background(
+            AppTheme.glassFallbackFill(for: colorScheme, tint: tint),
+            in: RoundedRectangle(cornerRadius: cornerRadius)
+        )
+        #endif
     }
 
     private var glassTintOpacity: Double {
