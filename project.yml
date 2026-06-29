@@ -12,7 +12,7 @@ settings:
     GENERATE_INFOPLIST_FILE: YES
     ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     MARKETING_VERSION: "1.1"
-    CURRENT_PROJECT_VERSION: "7"
+    CURRENT_PROJECT_VERSION: "9"
     VERSIONING_SYSTEM: apple-generic
 targets:
   CheatSheet:
@@ -103,6 +103,16 @@ targets:
         LSApplicationCategoryType: public.app-category.productivity
         NSHumanReadableCopyright: "Copyright 2026 Wesley Keetch. All rights reserved."
         UIApplicationSupportsIndirectInputEvents: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         UILaunchScreen:
           UIColorName: AccentColor
     sources:
@@ -140,7 +150,7 @@ schemes:
       targets:
         CheatSheet: all
         CheatSheetWidgets: all
-        CheatSheetTests: all
+        CheatSheetTests: testing
     test:
       targets:
         - CheatSheetTests
@@ -171,7 +181,7 @@ schemes:
     build:
       targets:
         CheatSheetiOS: all
-        CheatSheetiOSTests: all
+        CheatSheetiOSTests: testing
     test:
       targets:
         - CheatSheetiOSTests

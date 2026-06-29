@@ -63,7 +63,7 @@ xcodebuild \
     ONLY_ACTIVE_ARCH=NO \
     build
 
-binary="$temp_root/DerivedData-release/Build/Products/Release/CheatSheet.app/Contents/MacOS/CheatSheet"
+binary="$temp_root/DerivedData-release/Build/Products/Release/wesleycheatsheet.app/Contents/MacOS/wesleycheatsheet"
 lipo -info "$binary"
 
 print "Verification succeeded. Artifacts: $temp_root"

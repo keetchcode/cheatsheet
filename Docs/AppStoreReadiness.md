@@ -1,14 +1,14 @@
-# CheatSheet Mac App Store Release and QA Plan
+# CheatSheet App Store Release and QA Plan
 
-Updated: June 21, 2026
+Updated: June 29, 2026
 
 ## Scope and Assumptions
 
 - This plan is based on the current repository, with `project.yml` as the source of truth.
-- CheatSheet is a native SwiftUI Mac app with a WidgetKit extension. It has no accounts, networking, analytics, advertising, payments, or third-party packages.
+- CheatSheet is a native SwiftUI Mac app with a WidgetKit extension and an iOS/iPadOS app target. It has no accounts, networking, analytics, advertising, payments, or third-party packages.
 - Notes are stored locally with SwiftData and legacy `UserDefaults` migration. The widget reads locally shared data through an App Group.
 - The current minimum deployment target is macOS 15.0, not macOS 27. macOS 27 is currently beta. Keep macOS 15.0 unless product requirements intentionally drop older Macs; test macOS 27 as forward compatibility, not as the minimum.
-- Current release identity is version 1.1, build 3. A first App Store release may use 1.1, but use 1.0 if that is the intended public product version.
+- Current release identity is version 1.1. `project.yml` is the source of truth for the current build number, and archive pre-actions increment `CURRENT_PROJECT_VERSION` before creating release archives.
 
 ## Current Readiness Snapshot
 
@@ -16,6 +16,7 @@ Verified from the repository:
 
 - Main bundle ID: `com.wesleykeetch.wesleycheatsheet`.
 - Widget bundle ID: `com.wesleykeetch.wesleycheatsheet.widgets`.
+- iOS/iPadOS bundle ID: `com.wesleykeetch.wesleycheatsheet`.
 - App Store Connect app name: `Liquid Glass: CheatSheet`.
 - Team ID: `HD39MR492X`.
 - Shared App Group: `HD39MR492X.com.wesleykeetch.wesleycheatsheet`.
@@ -26,7 +27,7 @@ Verified from the repository:
 - The generated project exposes the expected app, widget, and test targets.
 - There are no requested camera, microphone, location, contacts, photos, broad file, incoming-network, or outgoing-network capabilities.
 - There are no third-party SDKs or Swift Package dependencies.
-- Existing Swift Testing coverage contains 36 tests in five suites; the arm64 suite passed on June 21, 2026 using Xcode 26.5.
+- Existing Swift Testing coverage covers the shared note model, repository, store, trash, widget selection, quick capture, and iOS flow behavior. Run the macOS and iOS/iPadOS suites before every TestFlight upload.
 
 Release blockers or required decisions:
 
@@ -156,23 +157,34 @@ Widget gallery installation remains a manual system integration test; UI tests s
 ### Versioning
 
 - `CFBundleShortVersionString` is the customer-visible release version, currently 1.1.
-- `CFBundleVersion` is the monotonically increasing build number, currently 3. Every upload for version 1.1 must use 4, 5, and so on after the previous build is uploaded.
+- `CFBundleVersion` is the monotonically increasing build number from `CURRENT_PROJECT_VERSION` in `project.yml`. Every upload for version 1.1 must use a build number higher than any already processed by App Store Connect.
 - App and widget must use the same marketing version and build number.
 
 ### Archive and Artifact Verification
 
+For iOS/iPadOS TestFlight:
+
+```sh
+xcodegen generate --spec project.yml
+xcodebuild -project CheatSheet.xcodeproj -scheme CheatSheetiOS -configuration Release -destination 'generic/platform=iOS' -archivePath /private/tmp/CheatSheet-iOS.xcarchive archive
+plutil -p /private/tmp/CheatSheet-iOS.xcarchive/Products/Applications/CheatSheet.app/Info.plist | grep -E 'CFBundleShortVersionString|CFBundleVersion|CFBundleIdentifier'
+codesign --verify --deep --strict --verbose=2 /private/tmp/CheatSheet-iOS.xcarchive/Products/Applications/CheatSheet.app
+```
+
+For Mac TestFlight:
+
 ```sh
 xcodegen generate --spec project.yml
 xcodebuild -project CheatSheet.xcodeproj -scheme CheatSheetApp -configuration Release -destination 'generic/platform=macOS' -archivePath /private/tmp/CheatSheet.xcarchive archive
-codesign --verify --deep --strict --verbose=2 /private/tmp/CheatSheet.xcarchive/Products/Applications/CheatSheet.app
-codesign -d --entitlements :- /private/tmp/CheatSheet.xcarchive/Products/Applications/CheatSheet.app
-codesign -d --entitlements :- /private/tmp/CheatSheet.xcarchive/Products/Applications/CheatSheet.app/Contents/PlugIns/CheatSheetWidgets.appex
-lipo -info /private/tmp/CheatSheet.xcarchive/Products/Applications/CheatSheet.app/Contents/MacOS/CheatSheet
+codesign --verify --deep --strict --verbose=2 /private/tmp/CheatSheet.xcarchive/Products/Applications/wesleycheatsheet.app
+codesign -d --entitlements :- /private/tmp/CheatSheet.xcarchive/Products/Applications/wesleycheatsheet.app
+codesign -d --entitlements :- /private/tmp/CheatSheet.xcarchive/Products/Applications/wesleycheatsheet.app/Contents/PlugIns/wesleycheatsheetWidgets.appex
+lipo -info /private/tmp/CheatSheet.xcarchive/Products/Applications/wesleycheatsheet.app/Contents/MacOS/wesleycheatsheet
 ```
 
 - Prefer Product > Archive in stable Xcode, then Organizer > Validate App. Resolve every error and understand every warning before Distribute App > App Store Connect > Upload.
 - Inspect archived Info.plists for version, build, deployment target, category, bundle IDs, and extension point. Confirm dSYMs exist and no development provisioning, debug entitlement, test bundle, or unexpected framework is embedded.
-- After processing, enable internal Mac TestFlight testing. Install from TestFlight on a clean user account and repeat the critical workflow before selecting that build for review.
+- After processing, enable internal TestFlight testing. Install from TestFlight on a clean device or user account and repeat the critical workflow before selecting that build for review.
 
 ### Metadata and Assets
 
