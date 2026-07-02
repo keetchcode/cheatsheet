@@ -195,6 +195,31 @@ private struct ContentToolbar: ToolbarContent {
     let toggleTrashAction: () -> Void
 
     var body: some ToolbarContent {
+        #if os(iOS)
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                createAction()
+            } label: {
+                Label("New Note", systemImage: "square.and.pencil")
+            }
+            .accessibilityLabel("New Note")
+        }
+
+        ToolbarItemGroup(placement: .secondaryAction) {
+            Button {
+                toggleTrashAction()
+            } label: {
+                Label(isShowingTrash ? "Show Notes" : "Show Trash", systemImage: isShowingTrash ? "note.text" : "archivebox")
+            }
+
+            Button(role: .destructive) {
+                archiveAction()
+            } label: {
+                Label("Move to Trash", systemImage: "trash")
+            }
+            .disabled(selectedNoteIsArchived)
+        }
+        #else
         ToolbarItemGroup(placement: .primaryAction) {
             Button {
                 createAction()
@@ -218,6 +243,7 @@ private struct ContentToolbar: ToolbarContent {
             }
             .help(isShowingTrash ? "Show Notes" : "Show Trash")
         }
+        #endif
     }
 }
 
@@ -242,24 +268,55 @@ private struct WidgetSetupHintView: View {
     let hideAction: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            Label("Ready for the widget", systemImage: "pin")
-                .font(.headline)
+        ViewThatFits(in: .horizontal) {
+            horizontalLayout
+            verticalLayout
+        }
+        .padding(AppDesign.panelPadding)
+        .background(.regularMaterial, in: .rect(cornerRadius: AppDesign.controlCornerRadius))
+        .accessibilityElement(children: .contain)
+    }
 
-            Text("Pin this note to keep it available in your widget.")
-                .foregroundStyle(.secondary)
+    private var horizontalLayout: some View {
+        HStack(spacing: 12) {
+            title
+
+            message
 
             Spacer()
 
-            Button("Hide") {
-                hideAction()
-            }
+            actions
+        }
+    }
+
+    private var verticalLayout: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            title
+            message
+            actions
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var title: some View {
+        Label("Ready for the widget", systemImage: "pin")
+            .font(.headline)
+    }
+
+    private var message: some View {
+        Text("Pin this note to keep it available in your widget.")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var actions: some View {
+        HStack(spacing: 8) {
+            Button("Hide", action: hideAction)
 
             Button("Pin", systemImage: "pin", action: pinAction)
                 .glassCompatibleButtonStyle(prominent: true)
         }
-        .padding(AppDesign.panelPadding)
-        .background(.regularMaterial, in: .rect(cornerRadius: AppDesign.controlCornerRadius))
     }
 }
 

@@ -10,17 +10,17 @@ Note Widget
 
 ## Description
 
-**CheatSheet is a 100% free, open-source macOS note app for developers.** Pin coding snippets, command references, and checklists to a desktop widget — so your most-used notes are always visible, never buried behind a window.
+**CheatSheet is a 100% free, open-source note app for developers on Mac, iPhone, and iPad.** Pin coding snippets, command references, and checklists to a widget so your most-used notes are always close by.
 
 **100% free • No ads • No accounts • No tracking • MIT license**
 
 ### Your cheat sheet, always in sight
 
-Every developer has commands they look up daily. Instead of digging through browser tabs or switching apps, pin one note to a macOS desktop widget. Small, medium, or large — it stays there, rendered with checklists, headings, and color.
+Every developer has commands they look up daily. Instead of digging through browser tabs or switching apps, pin one note to a WidgetKit widget. Small, medium, or large — it stays there, rendered with checklists, headings, and color.
 
 ### Features
 
-- **Desktop widget (WidgetKit)** — Pin any note to your desktop. Parses checkboxes and headings automatically. Refreshes every 30 min or instantly when you pin a new note.
+- **WidgetKit widgets** — Pin any note to a desktop or Home Screen widget. Parses checkboxes and headings automatically. Refreshes every 30 min or instantly when you pin a new note.
 - **Smart checklist parsing** — Lines starting with `- [x]` or `- [ ]` become checkable tasks. `#` lines become headings. Everything else is plain text.
 - **Quick capture & auto-save** — Create notes with a title and body. Edits save automatically after 400ms — no button to press.
 - **Full-text search** — Search across all note titles and bodies in both active notes and trash.
@@ -30,15 +30,15 @@ Every developer has commands they look up daily. Instead of digging through brow
 
 ### Why a widget?
 
-Traditional notes apps hide behind a dock icon or require alt-tabbing. CheatSheet's widget lives on your desktop — SQL joins, git commands, server addresses, deploy steps. One glance, no clicks.
+Traditional notes apps hide behind an icon or require app switching. CheatSheet's widget keeps SQL joins, git commands, server addresses, and deploy steps glanceable.
 
 ### Who it's for
 
-Developers, IT pros, power users, and anyone who needs glanceable access to short text notes, code snippets, or checklists on their Mac.
+Developers, IT pros, power users, and anyone who needs glanceable access to short text notes, code snippets, or checklists.
 
 ### Privacy
 
-Fully sandboxed. No analytics, no accounts, no network services, no sync. All data stays on your Mac.
+No analytics, no accounts, no network services, no sync. All data stays on device.
 
 ### License
 

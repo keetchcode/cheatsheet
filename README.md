@@ -1,6 +1,6 @@
 # CheatSheet
 
-CheatSheet is a **100% free and open source** macOS app for keeping short coding notes, checklists, and command reminders close by. It includes a desktop WidgetKit widget so one pinned note can stay visible while you work.
+CheatSheet is a **100% free and open source** macOS, iOS, and iPadOS app for keeping short coding notes, checklists, and command reminders close by. It includes WidgetKit widgets so one pinned note can stay visible while you work.
 
 ## Screenshots
 
@@ -19,7 +19,7 @@ CheatSheet is a **100% free and open source** macOS app for keeping short coding
 The app is intentionally simple:
 
 - Create and edit small cheat-sheet notes.
-- Pin one note for the desktop widget.
+- Pin one note for the WidgetKit widget on supported platforms.
 - Pick a note color and font style.
 - Move notes to Trash, restore them, or let them delete automatically after 30 days.
 - Store notes locally using SwiftData and app-group persistence.
@@ -28,8 +28,8 @@ The app is intentionally simple:
 ## Project Layout
 
 ```text
-CheatSheetApp/       macOS SwiftUI app
-CheatSheetWidgets/   WidgetKit extension
+CheatSheetApp/       Shared SwiftUI app sources for macOS, iOS, and iPadOS
+CheatSheetWidgets/   WidgetKit extension sources for macOS and iOS/iPadOS
 Shared/              Shared model, parsing, storage, and persistence code
 CheatSheetTests/     Swift Testing coverage
 project.yml          XcodeGen project definition
@@ -75,19 +75,30 @@ xcodegen generate
 xcodebuild -project CheatSheet.xcodeproj -scheme CheatSheet -destination 'platform=macOS' -derivedDataPath .derivedData CODE_SIGNING_ALLOWED=NO build
 ```
 
+Build and test the iOS/iPadOS app and widget:
+
+```sh
+xcodegen generate --spec project.yml
+xcodebuild test -project CheatSheet.xcodeproj -scheme CheatSheetiOS -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath /tmp/CheatSheet-iOS-Test-DD CODE_SIGNING_ALLOWED=NO
+xcodebuild build -project CheatSheet.xcodeproj -scheme CheatSheetiOS -destination 'platform=iOS Simulator,name=iPad Pro 11-inch (M4)' -derivedDataPath /tmp/CheatSheet-iPad-DD CODE_SIGNING_ALLOWED=NO
+```
+
 ## Running The Widget
 
-The app and widget share data through an app group. The current app group is:
+The app and widget share data through platform app groups. The current app groups are:
 
 ```text
-HD39MR492X.com.wesleykeetch.wesleycheatsheet
+macOS:      HD39MR492X.com.wesleykeetch.wesleycheatsheet
+iOS/iPadOS: group.com.wesleykeetch.wesleycheatsheet
 ```
 
 If you fork the project and want to run the widget with your own Apple Developer account, update the app group in these places:
 
 - `project.yml`
 - `CheatSheetApp/CheatSheet.entitlements`
+- `CheatSheetApp/CheatSheet-iOS.entitlements`
 - `CheatSheetWidgets/CheatSheetWidgets.entitlements`
+- `CheatSheetWidgets/CheatSheetWidgets-iOS.entitlements`
 - `Shared/Sources/CheatSheetNote.swift`
 
 Then regenerate the project:
@@ -96,11 +107,11 @@ Then regenerate the project:
 xcodegen generate
 ```
 
-After running the app once, add the CheatSheet widget from the macOS widget gallery. Pin a note in the app with `Use in Widget`, then the widget will read that note from the shared app group.
+After running the app once, add the CheatSheet widget from the macOS widget gallery or the iOS/iPadOS widget picker. Pin a note in the app with `Use in Widget`, then the widget will read that note from the shared app group.
 
 ## Privacy
 
-CheatSheet stores notes locally on your Mac. The app does not include analytics, accounts, sync, or network services.
+CheatSheet stores notes locally on device. The app does not include analytics, accounts, sync, or network services.
 
 ## Contributing
 

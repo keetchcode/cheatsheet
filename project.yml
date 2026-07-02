@@ -81,6 +81,36 @@ targets:
         CODE_SIGN_ENTITLEMENTS: CheatSheetWidgets/CheatSheetWidgets.entitlements
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: HD39MR492X
+  CheatSheetiOSWidgets:
+    type: app-extension
+    platform: iOS
+    info:
+      path: CheatSheetWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: CheatSheet Widgets
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    sources:
+      - path: CheatSheetWidgets/Sources
+      - path: Shared/Sources/CheatSheetNote.swift
+      - path: Shared/Sources/CheatSheetNoteRepository.swift
+      - path: Shared/Sources/DisplayLine.swift
+      - path: CheatSheetWidgets/Resources
+        type: resources
+    entitlements:
+      path: CheatSheetWidgets/CheatSheetWidgets-iOS.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.wesleykeetch.wesleycheatsheet
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.wesleycheatsheet.widgets
+        PRODUCT_NAME: CheatSheetWidgets
+        CODE_SIGN_ENTITLEMENTS: CheatSheetWidgets/CheatSheetWidgets-iOS.entitlements
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: HD39MR492X
   CheatSheetTests:
     type: bundle.unit-test
     platform: macOS
@@ -120,6 +150,9 @@ targets:
       - path: Shared/Sources
       - path: CheatSheetApp/Resources
         type: resources
+    dependencies:
+      - target: CheatSheetiOSWidgets
+        embed: true
     entitlements:
       path: CheatSheetApp/CheatSheet-iOS.entitlements
       properties:
@@ -181,6 +214,7 @@ schemes:
     build:
       targets:
         CheatSheetiOS: all
+        CheatSheetiOSWidgets: all
         CheatSheetiOSTests: testing
     test:
       targets:

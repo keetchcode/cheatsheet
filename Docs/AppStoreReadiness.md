@@ -1,11 +1,11 @@
 # CheatSheet App Store Release and QA Plan
 
-Updated: June 29, 2026
+Updated: July 2, 2026
 
 ## Scope and Assumptions
 
 - This plan is based on the current repository, with `project.yml` as the source of truth.
-- CheatSheet is a native SwiftUI Mac app with a WidgetKit extension and an iOS/iPadOS app target. It has no accounts, networking, analytics, advertising, payments, or third-party packages.
+- CheatSheet is a native SwiftUI app for macOS, iOS, and iPadOS, with WidgetKit extensions for macOS and iOS/iPadOS. It has no accounts, networking, analytics, advertising, payments, or third-party packages.
 - Notes are stored locally with SwiftData and legacy `UserDefaults` migration. The widget reads locally shared data through an App Group.
 - The current minimum deployment target is macOS 15.0, not macOS 27. macOS 27 is currently beta. Keep macOS 15.0 unless product requirements intentionally drop older Macs; test macOS 27 as forward compatibility, not as the minimum.
 - Current release identity is version 1.1. `project.yml` is the source of truth for the current build number, and archive pre-actions increment `CURRENT_PROJECT_VERSION` before creating release archives.
@@ -15,27 +15,27 @@ Updated: June 29, 2026
 Verified from the repository:
 
 - Main bundle ID: `com.wesleykeetch.wesleycheatsheet`.
-- Widget bundle ID: `com.wesleykeetch.wesleycheatsheet.widgets`.
+- macOS and iOS/iPadOS widget bundle ID: `com.wesleykeetch.wesleycheatsheet.widgets`.
 - iOS/iPadOS bundle ID: `com.wesleykeetch.wesleycheatsheet`.
 - App Store Connect app name: `Liquid Glass: CheatSheet`.
 - Team ID: `HD39MR492X`.
-- Shared App Group: `HD39MR492X.com.wesleykeetch.wesleycheatsheet`.
-- App and widget both enable App Sandbox and the same App Group.
+- macOS shared App Group: `HD39MR492X.com.wesleykeetch.wesleycheatsheet`.
+- iOS/iPadOS shared App Group: `group.com.wesleykeetch.wesleycheatsheet`.
+- The macOS app and widget both enable App Sandbox and the macOS App Group. The iOS/iPadOS app and widget both enable the iOS/iPadOS App Group.
 - Swift language mode is 6.0; minimum macOS is 15.0.
 - App category is Productivity.
 - All plist and entitlement files parse successfully.
 - The generated project exposes the expected app, widget, and test targets.
 - There are no requested camera, microphone, location, contacts, photos, broad file, incoming-network, or outgoing-network capabilities.
 - There are no third-party SDKs or Swift Package dependencies.
-- Existing Swift Testing coverage covers the shared note model, repository, store, trash, widget selection, quick capture, and iOS flow behavior. Run the macOS and iOS/iPadOS suites before every TestFlight upload.
+- Existing Swift Testing coverage covers the shared note model, repository, store, trash, widget selection, quick capture, platform App Group selection, and iOS flow behavior. Run the macOS and iOS/iPadOS suites before every TestFlight upload.
 
 Release blockers or required decisions:
 
-1. Run `Scripts/verify-macos.sh`, then complete a signed archive and Organizer validation on the release Mac. The June 21 diagnosis traced the earlier hang to File Provider coordination of the generated `.xcodeproj`; generating the project under `/private/tmp` resolved it, and 36 arm64 tests passed.
-2. Register and enable the App Group for both explicit App IDs in Certificates, Identifiers & Profiles.
-3. Confirm the 1024 px icon is fully opaque. Its current PNG contains an alpha channel; flatten it and regenerate all icon sizes if Organizer reports transparency.
-4. Add a UI-test target and automate the critical app flows below, or complete and record the equivalent manual regression before submission.
-5. Finish App Store Connect privacy, age rating, pricing, availability, support URL, privacy-policy URL, screenshots, and review notes.
+1. Run `Scripts/verify-macos.sh` and `xcodebuild test -scheme CheatSheetiOS`, then complete signed archive and Organizer validation on the release Mac. The June 21 diagnosis traced an earlier hang to File Provider coordination of the generated `.xcodeproj`; generating the project under `/private/tmp` resolved it.
+2. Register and enable the platform App Groups for the app and widget identifiers in Certificates, Identifiers & Profiles.
+3. Add a UI-test target and automate the critical app flows below, or complete and record the equivalent manual regression before submission.
+4. Finish App Store Connect privacy, age rating, pricing, availability, support URL, privacy-policy URL, screenshots, and review notes.
 
 ## A. Release Readiness Checklist
 
@@ -50,10 +50,11 @@ Release blockers or required decisions:
 
 ### Identifiers and Signing
 
-- Apple Developer portal: create or verify explicit App IDs for `com.wesleykeetch.wesleycheatsheet` and `com.wesleykeetch.wesleycheatsheet.widgets`.
-- Enable App Groups on both identifiers and attach `HD39MR492X.com.wesleykeetch.wesleycheatsheet` to both.
+- Apple Developer portal: create or verify explicit App IDs for `com.wesleykeetch.wesleycheatsheet` and `com.wesleykeetch.wesleycheatsheet.widgets` on the platforms being submitted.
+- Enable the matching App Group on the app and widget identifiers: `HD39MR492X.com.wesleykeetch.wesleycheatsheet` for macOS and `group.com.wesleykeetch.wesleycheatsheet` for iOS/iPadOS.
 - App Store Connect: create the macOS app record as `Liquid Glass: CheatSheet` with the exact main bundle ID and SKU; bundle IDs cannot be corrected after a build is attached.
-- Archive inspection must show the widget nested at `CheatSheet.app/Contents/PlugIns/CheatSheetWidgets.appex`, with the extension bundle ID and versions matching the parent.
+- Mac archive inspection must show the widget nested at `CheatSheet.app/Contents/PlugIns/CheatSheetWidgets.appex`, with the extension bundle ID and versions matching the parent.
+- iOS/iPadOS archive inspection must show the widget nested at `CheatSheet.app/PlugIns/CheatSheetWidgets.appex`, with the extension bundle ID and versions matching the parent.
 
 ### Info.plist and Assets
 
@@ -68,7 +69,7 @@ Run from a clean macOS user account and reset prior decisions before retesting.
 
 - First launch: expect no camera, microphone, location, contacts, photos, network-volume, Downloads, or Documents prompts.
 - Notes: create/edit/relaunch and verify persistence only inside the signed app/App Group containers. Do not inspect or write arbitrary user folders.
-- Widget: add it from the gallery, pin a note, edit it, archive it, and verify the timeline updates without access prompts.
+- Widget: add it from the macOS widget gallery or iOS/iPadOS widget picker, pin a note, edit it, archive it, and verify the timeline updates without access prompts.
 - Activity Monitor: enable the Sandbox column and confirm `CheatSheet` is shown as sandboxed.
 - System Settings > Privacy & Security: verify CheatSheet does not appear under Camera, Microphone, Location Services, Contacts, Photos, or Full Disk Access after the full test pass.
 - App Store Connect privacy answer, based on current code: **Data Not Collected**. Re-audit this answer whenever networking, analytics, crash reporting, accounts, or an SDK is added.
@@ -80,7 +81,7 @@ Run from a clean macOS user account and reset prior decisions before retesting.
 - Memory: use Allocations and Leaks for a 15-minute edit/search/trash/widget session. Require zero persistent leaks and no unbounded growth after repeating the workflow five times.
 - Persistence: type continuously for 60 seconds, quit normally, force quit, relaunch, and verify the last flushed content. Confirm the 400 ms debounce does not lose final edits when the scene becomes inactive.
 - Logging: inspect Console for faults, crashes, sandbox denials, SwiftData migration errors, and widget timeline failures. Note titles and bodies must remain private in logs.
-- Widget: verify placeholder, snapshot, small/medium/large families, no pinned note, long content, archived pinned note, restart, logout/login, and upgrade from a legacy `UserDefaults` install.
+- Widget: verify placeholder, snapshot, small/medium/large families, no pinned note, long content, archived pinned note, restart, logout/login, and upgrade from a legacy `UserDefaults` install. Repeat the widget pass on both macOS and iOS/iPadOS.
 
 ### Compatibility and Accessibility
 
@@ -168,6 +169,7 @@ For iOS/iPadOS TestFlight:
 xcodegen generate --spec project.yml
 xcodebuild -project CheatSheet.xcodeproj -scheme CheatSheetiOS -configuration Release -destination 'generic/platform=iOS' -archivePath /private/tmp/CheatSheet-iOS.xcarchive archive
 plutil -p /private/tmp/CheatSheet-iOS.xcarchive/Products/Applications/CheatSheet.app/Info.plist | grep -E 'CFBundleShortVersionString|CFBundleVersion|CFBundleIdentifier'
+plutil -p /private/tmp/CheatSheet-iOS.xcarchive/Products/Applications/CheatSheet.app/PlugIns/CheatSheetWidgets.appex/Info.plist | grep -E 'CFBundleShortVersionString|CFBundleVersion|CFBundleIdentifier|NSExtension'
 codesign --verify --deep --strict --verbose=2 /private/tmp/CheatSheet-iOS.xcarchive/Products/Applications/CheatSheet.app
 ```
 
@@ -189,14 +191,15 @@ lipo -info /private/tmp/CheatSheet.xcarchive/Products/Applications/wesleycheatsh
 ### Metadata and Assets
 
 - Upload 1-10 Mac screenshots at one accepted 16:10 size: 1280x800, 1440x900, 2560x1600, or 2880x1800. Prefer 2880x1800 and show only shipping UI.
-- Recommended order: editor/sidebar, desktop widget, checklist workflow, palette/font controls, and Trash restore. Keep claims literal and ensure screenshot text is readable.
+- Upload required iPhone and iPad screenshots for the iOS/iPadOS app record. Show the native mobile editor, note list, widget setup flow, and iPad split layout.
+- Recommended order: editor/sidebar, widget, checklist workflow, palette/font controls, and Trash restore. Keep claims literal and ensure screenshot text is readable.
 - Complete app name (`Liquid Glass: CheatSheet`), description, keywords, support URL, privacy-policy URL, copyright, category, pricing, territories, release method, and review contact.
 - Complete the age-rating questionnaire based on the app itself, not arbitrary user-authored notes; do not select Kids Category.
-- Review notes: explain that no account is required and provide exact widget steps: launch, create/select a note, choose **Use in Widget**, then add CheatSheet from the macOS widget gallery.
+- Review notes: explain that no account is required and provide exact widget steps: launch, create/select a note, choose **Use in Widget**, then add CheatSheet from the macOS widget gallery or iOS/iPadOS widget picker.
 
 ### Situation-Specific Blockers
 
-- App Group missing or mismatched on either provisioning profile: app may work while widget is blank.
+- App Group missing or mismatched on any app/widget provisioning profile: app may work while widget is blank.
 - Transparent or malformed Mac icon: asset/Organizer validation failure.
 - Unsigned or differently versioned widget extension: upload rejection.
 - App privacy says Data Not Collected while a future SDK or network feature collects data: compliance rejection.
@@ -208,13 +211,13 @@ lipo -info /private/tmp/CheatSheet.xcarchive/Products/Applications/wesleycheatsh
 
 1. Freeze features; triage existing uncommitted changes; choose public version 1.0 or 1.1 and increment the build.
 2. Update `project.yml` for Hardened Runtime and final version/build; add `ITSAppUsesNonExemptEncryption` only after the encryption check; regenerate with XcodeGen.
-3. Flatten/validate AppIcon alpha and capture final 2880x1800 screenshots.
+3. Validate AppIcon alpha and capture final Mac, iPhone, and iPad screenshots.
 4. Register both App IDs and the shared App Group in the Developer portal; refresh signing in stable Xcode.
 5. Run plist lint, `git diff --check`, arm64 and x86_64 unit tests, then the UI/manual matrix on macOS 15 and 26.
 6. Run forward-compatibility smoke tests using Xcode 27 beta and macOS 27 beta; do not use the beta archive for submission.
 7. Profile cold launch, typing/search, 500-note behavior, memory/leaks, and widget timelines; fix only measured regressions and rerun affected tests.
 8. Create the signed Release archive in stable Xcode; inspect signatures, entitlements, versions, architectures, extension embedding, dSYMs, and archived plists.
 9. Validate and upload in Organizer. Resolve all processing warnings, complete export compliance, and wait for the build to finish processing.
-10. Distribute through internal Mac TestFlight. On a clean account test onboarding, edit/persist/relaunch, pin/add/update widget, search, styles, Trash/restore/delete, offline use, and uninstall/reinstall.
+10. Distribute through internal Mac and iOS TestFlight. On a clean account/device test onboarding, edit/persist/relaunch, pin/add/update widget, search, styles, Trash/restore/delete, offline use, and uninstall/reinstall.
 11. Complete App Store Connect privacy (`Data Not Collected`), age rating, URLs, pricing, availability, metadata, screenshots, and review notes.
 12. Select the tested build, Add for Review, inspect the draft submission once more, then Submit for Review. Use manual release after approval for the first version so availability can be checked before launch.

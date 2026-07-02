@@ -3,6 +3,14 @@ import SwiftData
 import Testing
 
 struct NoteRepositoryTests {
+    @Test func appGroupIdentifierMatchesCurrentPlatform() {
+        #if os(iOS)
+        #expect(cheatSheetAppGroupID == "group.com.wesleykeetch.wesleycheatsheet")
+        #else
+        #expect(cheatSheetAppGroupID == "HD39MR492X.com.wesleykeetch.wesleycheatsheet")
+        #endif
+    }
+
     @Test func loadsStarterNotesWhenNoDataExists() throws {
         let suite = "CheatSheetTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
