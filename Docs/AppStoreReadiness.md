@@ -8,7 +8,7 @@ Updated: July 2, 2026
 - CheatSheet is a native SwiftUI app for macOS, iOS, and iPadOS, with WidgetKit extensions for macOS and iOS/iPadOS. It has no accounts, networking, analytics, advertising, payments, or third-party packages.
 - Notes are stored locally with SwiftData and legacy `UserDefaults` migration. The widget reads locally shared data through an App Group.
 - The current minimum deployment target is macOS 15.0, not macOS 27. macOS 27 is currently beta. Keep macOS 15.0 unless product requirements intentionally drop older Macs; test macOS 27 as forward compatibility, not as the minimum.
-- Current release identity is version 1.1. `project.yml` is the source of truth for the current build number, and archive pre-actions increment `CURRENT_PROJECT_VERSION` before creating release archives.
+- Current release identity is version 1.1. `project.yml` is the source of truth for the current build number. Run `Scripts/increment-build-number.sh` intentionally before a release archive when consuming the next upload build number.
 
 ## Current Readiness Snapshot
 
@@ -34,7 +34,7 @@ Release blockers or required decisions:
 
 1. Run `Scripts/verify-macos.sh` and `xcodebuild test -scheme CheatSheetiOS`, then complete signed archive and Organizer validation on the release Mac. The June 21 diagnosis traced an earlier hang to File Provider coordination of the generated `.xcodeproj`; generating the project under `/private/tmp` resolved it.
 2. Register and enable the platform App Groups for the app and widget identifiers in Certificates, Identifiers & Profiles.
-3. Add a UI-test target and automate the critical app flows below, or complete and record the equivalent manual regression before submission.
+3. Expand the `CheatSheetiOSUI` smoke test into the critical app flows below, or complete and record the equivalent manual regression before submission.
 4. Finish App Store Connect privacy, age rating, pricing, availability, support URL, privacy-policy URL, screenshots, and review notes.
 
 ## A. Release Readiness Checklist
@@ -42,7 +42,7 @@ Release blockers or required decisions:
 ### Build Configuration
 
 - In `project.yml`, keep `MACOSX_DEPLOYMENT_TARGET: 15.0` and `SWIFT_VERSION: 6.0`. Build with the latest stable Xcode accepted by App Store Connect; use Xcode 27 beta only for macOS 27 compatibility testing.
-- Add `ENABLE_HARDENED_RUNTIME: YES` to the app and widget Release settings in `project.yml`, regenerate, and confirm both targets still run. App Sandbox is the Mac App Store requirement; Hardened Runtime is additional defense and avoids distribution-mode drift.
+- Keep `ENABLE_HARDENED_RUNTIME: YES` on the macOS app and widget Release settings in `project.yml`, regenerate, and confirm both targets still run. App Sandbox is the Mac App Store requirement; Hardened Runtime is additional defense and avoids distribution-mode drift.
 - Keep automatic signing for the first archive unless the team requires managed profiles. Confirm the Release archive uses Apple Distribution signing and Mac App Store provisioning for both executables.
 - Keep only the two existing entitlements. Do not add temporary sandbox exceptions, file access, network, camera, microphone, or location entitlements without a real feature that needs them.
 - Set `ITSAppUsesNonExemptEncryption: NO` in the main app Info.plist only after confirming there is no custom or non-exempt encryption. Current source has no network or cryptography code.
@@ -90,7 +90,7 @@ Run from a clean macOS user account and reset prior decisions before retesting.
 - Display matrix: 1280x800, 1440x900, Retina 2560x1600 or larger, smallest supported window, maximized window, and multiple displays.
 - Appearance: light, dark, Increase Contrast, Reduce Transparency, Reduce Motion, Differentiate Without Color, and accent-color changes.
 - Input: keyboard-only navigation, Full Keyboard Access, VoiceOver labels/order, menu commands, search focus, Escape/Return behavior, mouse, and trackpad.
-- Content: empty, one note, 500 notes, very long title/body, emoji, right-to-left text, large accessibility text, and US/non-US locale. Current UI is English-only; either declare English only or add a string catalog before localization.
+- Content: empty, one note, 500 notes, very long title/body, emoji, right-to-left text, large accessibility text, and US/non-US locale. The current product is intentionally English-only; add a string catalog before committing to localization.
 
 ## B. Test Plan
 
@@ -119,7 +119,7 @@ The current suites cover parsing, repository save/load and migration, note-store
 
 ### UI Automation
 
-Add `CheatSheetUITests` in `project.yml` with deterministic launch arguments for an isolated temporary store. Automate:
+The `CheatSheetiOSUI` scheme launches the iOS app and verifies that either onboarding or the main notes surface appears. Extend it with deterministic launch arguments for an isolated temporary store, then automate:
 
 1. Fresh launch, onboarding completion, relaunch, and onboarding reset from Settings.
 2. Create, rename, edit, search, select, and delete a note.
@@ -160,6 +160,7 @@ Widget gallery installation remains a manual system integration test; UI tests s
 - `CFBundleShortVersionString` is the customer-visible release version, currently 1.1.
 - `CFBundleVersion` is the monotonically increasing build number from `CURRENT_PROJECT_VERSION` in `project.yml`. Every upload for version 1.1 must use a build number higher than any already processed by App Store Connect.
 - App and widget must use the same marketing version and build number.
+- Archive actions do not mutate `project.yml`. Bump `CURRENT_PROJECT_VERSION` with `Scripts/increment-build-number.sh`, review the diff, regenerate, then archive.
 
 ### Archive and Artifact Verification
 

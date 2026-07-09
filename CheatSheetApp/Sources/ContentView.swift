@@ -32,7 +32,9 @@ struct ContentView: View {
             }
             .onChange(of: scenePhase) { _, newPhase in
                 guard newPhase != .active else { return }
-                store.flushPendingChanges()
+                Task {
+                    await store.flushPendingChanges()
+                }
             }
             .task {
                 isShowingOnboarding = !hasCompletedOnboarding

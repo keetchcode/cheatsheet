@@ -265,7 +265,7 @@ struct NoteStoreTests {
         #expect(sut.archivedNotes.count == 1)
     }
 
-    @Test func expiredArchivedNotesAreRemovedOnStartup() throws {
+    @Test func expiredArchivedNotesAreRemovedOnStartup() async throws {
         let activeID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000801"))
         let expiredID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000802"))
         let freshID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000803"))
@@ -279,12 +279,13 @@ struct NoteStoreTests {
         )
 
         let sut = NoteStore(repository: repository, reloadWidgetTimelines: {}, now: { currentDate })
+        await sut.flushPendingChanges()
 
         #expect(sut.notes.map(\.id) == [activeID, freshID])
         #expect(repository.savedNotes.last?.map(\.id) == [activeID, freshID])
     }
 
-    @Test func flushPendingChangesSavesAndReloadsWidget() {
+    @Test func flushPendingChangesSavesAndReloadsWidget() async {
         let repository = SpyNoteRepository(loadedNotes: [Self.sampleNote(title: "Existing")])
         var reloadCount = 0
         let sut = NoteStore(repository: repository) {
@@ -293,13 +294,14 @@ struct NoteStoreTests {
         reloadCount = 0
 
         sut.addNote()
-        sut.flushPendingChanges()
+        await sut.flushPendingChanges()
 
         #expect(repository.savedNotes.last == sut.notes)
         #expect(reloadCount == 1)
+        #expect(sut.persistenceStatus.isFailure == false)
     }
 
-    @Test func flushPendingChangesSkipsWidgetReloadForNonWidgetNoteChanges() throws {
+    @Test func flushPendingChangesSkipsWidgetReloadForNonWidgetNoteChanges() async throws {
         let pinnedID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000401"))
         let unpinnedID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000402"))
         let repository = SpyNoteRepository(
@@ -318,10 +320,47 @@ struct NoteStoreTests {
         draft.body = "- edited draft"
 
         draftBinding.wrappedValue = draft
-        sut.flushPendingChanges()
+        await sut.flushPendingChanges()
 
         #expect(repository.savedNotes.last == sut.notes)
         #expect(reloadCount == 0)
+    }
+
+    @Test func saveFailureUpdatesPersistenceStatusWithoutReloadingWidget() async {
+        let repository = SpyNoteRepository(
+            loadedNotes: [Self.sampleNote(title: "Existing")],
+            saveError: CheatSheetStorageError.repositoryUnavailable
+        )
+        var reloadCount = 0
+        let sut = NoteStore(repository: repository) {
+            reloadCount += 1
+        }
+        reloadCount = 0
+
+        sut.addNote()
+        await sut.flushPendingChanges()
+
+        #expect(sut.persistenceStatus.isFailure)
+        #expect(reloadCount == 0)
+    }
+
+    @Test func filtersLargeNoteCollectionDeterministically() {
+        let notes = (0..<500).map { index in
+            CheatSheetNote(
+                title: index == 377 ? "Needle Command" : "Command \(index)",
+                body: "- command \(index)",
+                isPinned: index == 499,
+                updatedAt: Date(timeIntervalSince1970: TimeInterval(index))
+            )
+        }
+        let repository = SpyNoteRepository(loadedNotes: notes)
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {})
+
+        sut.searchText = "needle"
+
+        #expect(sut.filteredNotes.map(\.title) == ["Needle Command"])
+        #expect(sut.activeNotes.first?.title == "Command 499")
+        #expect(sut.activeNotes.count == 500)
     }
 
     private static func sampleNote(
@@ -341,19 +380,35 @@ struct NoteStoreTests {
     }
 }
 
-private final class SpyNoteRepository: CheatSheetNoteRepository {
+private final class SpyNoteRepository: CheatSheetNoteRepository, @unchecked Sendable {
     let loadedNotes: [CheatSheetNote]
+    let loadError: (any Error)?
+    let saveError: (any Error)?
     private(set) var savedNotes: [[CheatSheetNote]] = []
 
-    init(loadedNotes: [CheatSheetNote]) {
+    init(
+        loadedNotes: [CheatSheetNote],
+        loadError: (any Error)? = nil,
+        saveError: (any Error)? = nil
+    ) {
         self.loadedNotes = loadedNotes
+        self.loadError = loadError
+        self.saveError = saveError
     }
 
-    func loadNotes() -> [CheatSheetNote] {
-        loadedNotes
+    func loadNotes() throws -> [CheatSheetNote] {
+        if let loadError {
+            throw loadError
+        }
+
+        return loadedNotes
     }
 
-    func saveNotes(_ notes: [CheatSheetNote]) {
+    func saveNotes(_ notes: [CheatSheetNote]) throws {
+        if let saveError {
+            throw saveError
+        }
+
         savedNotes.append(notes)
     }
 }

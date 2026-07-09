@@ -50,6 +50,9 @@ targets:
         CODE_SIGN_ENTITLEMENTS: CheatSheetApp/CheatSheet.entitlements
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: HD39MR492X
+      configs:
+        Release:
+          ENABLE_HARDENED_RUNTIME: YES
   CheatSheetWidgets:
     type: app-extension
     platform: macOS
@@ -81,6 +84,9 @@ targets:
         CODE_SIGN_ENTITLEMENTS: CheatSheetWidgets/CheatSheetWidgets.entitlements
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: HD39MR492X
+      configs:
+        Release:
+          ENABLE_HARDENED_RUNTIME: YES
   CheatSheetiOSWidgets:
     type: app-extension
     platform: iOS
@@ -177,6 +183,16 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.wesleycheatsheet.ios.tests
+  CheatSheetiOSUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: CheatSheetUITests/Sources
+    dependencies:
+      - target: CheatSheetiOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.wesleycheatsheet.ios.ui-tests
 schemes:
   CheatSheet:
     build:
@@ -191,11 +207,6 @@ schemes:
       config: Debug
     archive:
       config: Release
-      preActions:
-        - name: Increment Build Number
-          settingsTarget: CheatSheet
-          script: |
-            "$SRCROOT/Scripts/increment-build-number.sh"
   CheatSheetApp:
     build:
       targets:
@@ -205,11 +216,6 @@ schemes:
       config: Debug
     archive:
       config: Release
-      preActions:
-        - name: Increment Build Number
-          settingsTarget: CheatSheet
-          script: |
-            "$SRCROOT/Scripts/increment-build-number.sh"
   CheatSheetiOS:
     build:
       targets:
@@ -223,8 +229,14 @@ schemes:
       config: Debug
     archive:
       config: Release
-      preActions:
-        - name: Increment Build Number
-          settingsTarget: CheatSheetiOS
-          script: |
-            "$SRCROOT/Scripts/increment-build-number.sh"
+  CheatSheetiOSUI:
+    build:
+      targets:
+        CheatSheetiOS: all
+        CheatSheetiOSWidgets: all
+        CheatSheetiOSUITests: testing
+    test:
+      targets:
+        - CheatSheetiOSUITests
+    run:
+      config: Debug

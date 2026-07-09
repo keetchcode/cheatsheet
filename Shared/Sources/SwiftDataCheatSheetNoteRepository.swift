@@ -7,7 +7,8 @@ public enum CheatSheetNoteRepositoryFactory {
             return SwiftDataCheatSheetNoteRepository(
                 container: try SwiftDataCheatSheetNoteRepository.makeDefaultContainer(),
                 legacyRepository: try? UserDefaultsCheatSheetNoteRepository.appGroup(),
-                widgetSnapshotRepository: try? WidgetNoteSnapshotRepository.appGroup()
+                widgetSnapshotRepository: try? WidgetNoteSnapshotRepository.appGroup(),
+                metadataRepository: try? CheatSheetStoreMetadataRepository.appGroup()
             )
         } catch {
             do {
@@ -19,72 +20,79 @@ public enum CheatSheetNoteRepositoryFactory {
     }
 }
 
-public final class SwiftDataCheatSheetNoteRepository: CheatSheetNoteRepository {
+public final class SwiftDataCheatSheetNoteRepository: CheatSheetNoteRepository, @unchecked Sendable {
     private let container: ModelContainer
     private let legacyRepository: (any CheatSheetNoteRepository)?
     private let widgetSnapshotRepository: WidgetNoteSnapshotRepository?
+    private let metadataRepository: CheatSheetStoreMetadataRepository?
 
     init(
         container: ModelContainer,
         legacyRepository: (any CheatSheetNoteRepository)? = nil,
-        widgetSnapshotRepository: WidgetNoteSnapshotRepository? = nil
+        widgetSnapshotRepository: WidgetNoteSnapshotRepository? = nil,
+        metadataRepository: CheatSheetStoreMetadataRepository? = nil
     ) {
         self.container = container
         self.legacyRepository = legacyRepository
         self.widgetSnapshotRepository = widgetSnapshotRepository
+        self.metadataRepository = metadataRepository
     }
 
-    public func loadNotes() -> [CheatSheetNote] {
+    public func loadNotes() throws -> [CheatSheetNote] {
         let context = ModelContext(container)
 
-        do {
-            let persistedNotes = try context.fetch(Self.notesDescriptor)
-            let notes = persistedNotes.map(\.note)
+        let persistedNotes = try context.fetch(Self.notesDescriptor)
+        let notes = persistedNotes.map(\.note)
 
-            if notes.isEmpty, let legacyNotes = legacyRepository?.loadNotes() {
-                saveNotes(legacyNotes)
-                return legacyNotes
-            }
-
-            return notes.isEmpty ? CheatSheetNote.starterNotes : notes
-        } catch {
-            return legacyRepository?.loadNotes() ?? CheatSheetNote.starterNotes
+        guard notes.isEmpty else {
+            metadataRepository?.markSwiftDataStoreInitialized()
+            return notes
         }
+
+        if let legacyNotes = try legacyRepository?.loadNotes(), legacyNotes.isEmpty == false {
+            try saveNotes(legacyNotes)
+            return legacyNotes
+        }
+
+        if metadataRepository?.hasInitializedSwiftDataStore == true {
+            return []
+        }
+
+        let starterNotes = CheatSheetNote.starterNotes
+        try saveNotes(starterNotes)
+        return starterNotes
     }
 
-    public func saveNotes(_ notes: [CheatSheetNote]) {
+    public func saveNotes(_ notes: [CheatSheetNote]) throws {
         let context = ModelContext(container)
         let notes = Self.uniqueNotesPreservingLastOccurrence(notes)
 
-        do {
-            let existingNotes = try context.fetch(Self.notesDescriptor)
-            var existingNotesByID: [UUID: PersistedCheatSheetNote] = [:]
-            var duplicateExistingNotes: [PersistedCheatSheetNote] = []
+        let existingNotes = try context.fetch(Self.notesDescriptor)
+        var existingNotesByID: [UUID: PersistedCheatSheetNote] = [:]
+        var duplicateExistingNotes: [PersistedCheatSheetNote] = []
 
-            for persistedNote in existingNotes {
-                if existingNotesByID[persistedNote.id] == nil {
-                    existingNotesByID[persistedNote.id] = persistedNote
-                } else {
-                    duplicateExistingNotes.append(persistedNote)
-                }
+        for persistedNote in existingNotes {
+            if existingNotesByID[persistedNote.id] == nil {
+                existingNotesByID[persistedNote.id] = persistedNote
+            } else {
+                duplicateExistingNotes.append(persistedNote)
             }
-
-            for (index, note) in notes.enumerated() {
-                if let persistedNote = existingNotesByID.removeValue(forKey: note.id) {
-                    persistedNote.update(with: note, sortIndex: index)
-                } else {
-                    context.insert(PersistedCheatSheetNote(note: note, sortIndex: index))
-                }
-            }
-
-            existingNotesByID.values.forEach(context.delete)
-            duplicateExistingNotes.forEach(context.delete)
-
-            try context.save()
-            widgetSnapshotRepository?.saveNote(notes.widgetDisplayNote)
-        } catch {
-            widgetSnapshotRepository?.saveNote(notes.widgetDisplayNote)
         }
+
+        for (index, note) in notes.enumerated() {
+            if let persistedNote = existingNotesByID.removeValue(forKey: note.id) {
+                persistedNote.update(with: note, sortIndex: index)
+            } else {
+                context.insert(PersistedCheatSheetNote(note: note, sortIndex: index))
+            }
+        }
+
+        existingNotesByID.values.forEach(context.delete)
+        duplicateExistingNotes.forEach(context.delete)
+
+        try context.save()
+        try widgetSnapshotRepository?.saveNote(notes.widgetDisplayNote)
+        metadataRepository?.markSwiftDataStoreInitialized()
     }
 
     private static func uniqueNotesPreservingLastOccurrence(_ notes: [CheatSheetNote]) -> [CheatSheetNote] {

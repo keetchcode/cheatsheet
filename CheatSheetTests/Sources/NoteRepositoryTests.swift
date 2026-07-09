@@ -18,7 +18,7 @@ struct NoteRepositoryTests {
 
         let sut = UserDefaultsCheatSheetNoteRepository(defaults: defaults)
 
-        #expect(sut.loadNotes() == CheatSheetNote.starterNotes)
+        #expect(try sut.loadNotes() == CheatSheetNote.starterNotes)
     }
 
     @Test func savesAndLoadsNotesFromInjectedDefaults() throws {
@@ -39,9 +39,9 @@ struct NoteRepositoryTests {
             )
         ]
 
-        sut.saveNotes(notes)
+        try sut.saveNotes(notes)
 
-        #expect(sut.loadNotes() == notes)
+        #expect(try sut.loadNotes() == notes)
     }
 
     @Test func savedEmptyNotesLoadsAsEmptyCollection() throws {
@@ -51,9 +51,9 @@ struct NoteRepositoryTests {
 
         let sut = UserDefaultsCheatSheetNoteRepository(defaults: defaults)
 
-        sut.saveNotes([])
+        try sut.saveNotes([])
 
-        #expect(sut.loadNotes().isEmpty)
+        #expect(try sut.loadNotes().isEmpty)
     }
 
     @Test func invalidStoredDataFallsBackToStarterNotes() throws {
@@ -64,7 +64,31 @@ struct NoteRepositoryTests {
         let sut = UserDefaultsCheatSheetNoteRepository(defaults: defaults)
         defaults.set(Data("not-json".utf8), forKey: "cheatSheet.notes")
 
-        #expect(sut.loadNotes() == CheatSheetNote.starterNotes)
+        #expect(try sut.loadNotes() == CheatSheetNote.starterNotes)
+    }
+
+    @Test func malformedTintHexNormalizesToDefaultBlue() throws {
+        let note = CheatSheetNote(title: "Invalid Tint", body: "- test", tintHex: "not-a-color")
+        let encoded = try JSONEncoder().encode(note)
+        let decoded = try JSONDecoder().decode(CheatSheetNote.self, from: encoded)
+
+        #expect(note.tintHex == CheatSheetPalette.blue.rawValue)
+        #expect(decoded.tintHex == CheatSheetPalette.blue.rawValue)
+        #expect(CheatSheetPalette.normalizedHex(" #45c7c4 ") == CheatSheetPalette.cyan.rawValue)
+    }
+
+    @Test func widgetSnapshotCanRepresentNoActiveNote() throws {
+        let suite = "CheatSheetTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let sut = WidgetNoteSnapshotRepository(defaults: defaults)
+        let note = CheatSheetNote(title: "Pinned", body: "- show in widget", isPinned: true)
+
+        try sut.saveNote(note)
+        #expect(sut.loadNote()?.title == "Pinned")
+
+        try sut.saveNote(nil)
+        #expect(sut.loadNote() == nil)
     }
 
     @Test func swiftDataRepositorySavesAndLoadsNotesInOrder() throws {
@@ -89,13 +113,16 @@ struct NoteRepositoryTests {
             )
         ]
 
-        sut.saveNotes(notes)
+        try sut.saveNotes(notes)
 
-        #expect(sut.loadNotes() == notes)
+        #expect(try sut.loadNotes() == notes)
     }
 
     @Test func swiftDataRepositoryMigratesLegacyNotesWhenStoreIsEmpty() throws {
         let container = try SwiftDataCheatSheetNoteRepository.makeInMemoryContainer()
+        let suite = "CheatSheetTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
         let legacy = SpyLegacyRepository(
             notes: [
                 CheatSheetNote(
@@ -107,12 +134,36 @@ struct NoteRepositoryTests {
                 )
             ]
         )
-        let sut = SwiftDataCheatSheetNoteRepository(container: container, legacyRepository: legacy)
+        let metadataRepository = CheatSheetStoreMetadataRepository(defaults: defaults)
+        let sut = SwiftDataCheatSheetNoteRepository(
+            container: container,
+            legacyRepository: legacy,
+            metadataRepository: metadataRepository
+        )
 
-        let migratedNotes = sut.loadNotes()
+        let migratedNotes = try sut.loadNotes()
 
         #expect(migratedNotes == legacy.notes)
-        #expect(sut.loadNotes() == legacy.notes)
+        #expect(try sut.loadNotes() == legacy.notes)
+        #expect(metadataRepository.hasInitializedSwiftDataStore)
+    }
+
+    @Test func swiftDataRepositoryKeepsEmptyStoreEmptyAfterInitialization() throws {
+        let container = try SwiftDataCheatSheetNoteRepository.makeInMemoryContainer()
+        let suite = "CheatSheetTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let metadataRepository = CheatSheetStoreMetadataRepository(defaults: defaults)
+        let sut = SwiftDataCheatSheetNoteRepository(
+            container: container,
+            legacyRepository: EmptyLegacyRepository(),
+            metadataRepository: metadataRepository
+        )
+
+        try sut.saveNotes([])
+
+        #expect(metadataRepository.hasInitializedSwiftDataStore)
+        #expect(try sut.loadNotes().isEmpty)
     }
 
     @Test func swiftDataRepositorySavesWidgetSnapshotWithoutMirroringFullLegacyNotes() throws {
@@ -136,7 +187,7 @@ struct NoteRepositoryTests {
             )
         ]
 
-        sut.saveNotes(notes)
+        try sut.saveNotes(notes)
 
         #expect(widgetSnapshotRepository.loadNote() == notes[0])
         #expect(legacy.savedNotes.isEmpty)
@@ -172,10 +223,10 @@ struct NoteRepositoryTests {
             )
         ]
 
-        sut.saveNotes(originalNotes)
-        sut.saveNotes(updatedNotes)
+        try sut.saveNotes(originalNotes)
+        try sut.saveNotes(updatedNotes)
 
-        #expect(sut.loadNotes() == updatedNotes)
+        #expect(try sut.loadNotes() == updatedNotes)
     }
 
     @Test func swiftDataRepositoryDeduplicatesSavedNotesByID() throws {
@@ -209,16 +260,24 @@ struct NoteRepositoryTests {
         ]
         let expectedNotes = [duplicateNotes[1]]
 
-        sut.saveNotes(duplicateNotes)
+        try sut.saveNotes(duplicateNotes)
 
-        #expect(sut.loadNotes() == expectedNotes)
+        #expect(try sut.loadNotes() == expectedNotes)
         #expect(widgetSnapshotRepository.loadNote() == expectedNotes[0])
         #expect(legacy.savedNotes.isEmpty)
     }
 
 }
 
-private final class SpyLegacyRepository: CheatSheetNoteRepository {
+private struct EmptyLegacyRepository: CheatSheetNoteRepository {
+    func loadNotes() throws -> [CheatSheetNote] {
+        []
+    }
+
+    func saveNotes(_ notes: [CheatSheetNote]) throws {}
+}
+
+private final class SpyLegacyRepository: CheatSheetNoteRepository, @unchecked Sendable {
     let notes: [CheatSheetNote]
     private(set) var savedNotes: [[CheatSheetNote]] = []
 
@@ -226,11 +285,11 @@ private final class SpyLegacyRepository: CheatSheetNoteRepository {
         self.notes = notes
     }
 
-    func loadNotes() -> [CheatSheetNote] {
+    func loadNotes() throws -> [CheatSheetNote] {
         notes
     }
 
-    func saveNotes(_ notes: [CheatSheetNote]) {
+    func saveNotes(_ notes: [CheatSheetNote]) throws {
         savedNotes.append(notes)
     }
 }

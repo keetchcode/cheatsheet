@@ -1,11 +1,20 @@
 import Foundation
 import SwiftUI
 
-#if os(iOS)
-public let cheatSheetAppGroupID = "group.com.wesleykeetch.wesleycheatsheet"
-#else
-public let cheatSheetAppGroupID = "HD39MR492X.com.wesleykeetch.wesleycheatsheet"
-#endif
+public enum CheatSheetAppGroupID {
+    public static let iOS = "group.com.wesleykeetch.wesleycheatsheet"
+    public static let macOS = "HD39MR492X.com.wesleykeetch.wesleycheatsheet"
+
+    public static var current: String {
+        #if os(iOS)
+        iOS
+        #else
+        macOS
+        #endif
+    }
+}
+
+public let cheatSheetAppGroupID = CheatSheetAppGroupID.current
 
 public struct CheatSheetNote: Codable, Identifiable, Equatable, Sendable {
     public var id: UUID
@@ -30,11 +39,46 @@ public struct CheatSheetNote: Codable, Identifiable, Equatable, Sendable {
         self.id = id
         self.title = title
         self.body = body
-        self.tintHex = tintHex
+        self.tintHex = CheatSheetPalette.normalizedHex(tintHex)
         self.fontStyleRawValue = fontStyle.rawValue
         self.isPinned = isPinned
         self.updatedAt = updatedAt
         self.archivedAt = archivedAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case body
+        case tintHex
+        case fontStyleRawValue
+        case isPinned
+        case updatedAt
+        case archivedAt
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        body = try container.decode(String.self, forKey: .body)
+        tintHex = CheatSheetPalette.normalizedHex(try container.decodeIfPresent(String.self, forKey: .tintHex))
+        fontStyleRawValue = try container.decodeIfPresent(String.self, forKey: .fontStyleRawValue)
+        isPinned = try container.decode(Bool.self, forKey: .isPinned)
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        archivedAt = try container.decodeIfPresent(Date.self, forKey: .archivedAt)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(body, forKey: .body)
+        try container.encode(CheatSheetPalette.normalizedHex(tintHex), forKey: .tintHex)
+        try container.encodeIfPresent(fontStyleRawValue, forKey: .fontStyleRawValue)
+        try container.encode(isPinned, forKey: .isPinned)
+        try container.encode(updatedAt, forKey: .updatedAt)
+        try container.encodeIfPresent(archivedAt, forKey: .archivedAt)
     }
 
     public var displayTitle: String {
@@ -132,6 +176,22 @@ public enum CheatSheetPalette: String, CaseIterable, Identifiable, Sendable {
         case .graphite: "Graphite"
         }
     }
+
+    public static func normalizedHex(_ hex: String?) -> String {
+        var stripped = (hex ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if stripped.hasPrefix("#") {
+            stripped.removeFirst()
+        }
+
+        guard stripped.count == 6,
+              stripped.allSatisfy({ $0.hexDigitValue != nil }) else {
+            return CheatSheetPalette.blue.rawValue
+        }
+
+        return stripped.uppercased()
+    }
 }
 
 public enum CheatSheetFontStyle: String, CaseIterable, Identifiable, Codable, Sendable {
@@ -163,7 +223,7 @@ public enum CheatSheetFontStyle: String, CaseIterable, Identifiable, Codable, Se
 
 public extension Color {
     init(hex: String) {
-        let scanner = Scanner(string: hex)
+        let scanner = Scanner(string: CheatSheetPalette.normalizedHex(hex))
         var value: UInt64 = 0
         scanner.scanHexInt64(&value)
 

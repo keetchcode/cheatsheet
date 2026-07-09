@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  ios:
+    name: iOS Unit Tests
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Install XcodeGen
+        run: |
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            brew install xcodegen
+          fi
+
+      - name: Generate project
+        run: xcodegen generate --spec project.yml --project . --project-root . --quiet
+
+      - name: Verify project configuration
+        run: Scripts/verify-project-config.sh
+
+      - name: Run iOS unit tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project CheatSheet.xcodeproj \
+            -scheme CheatSheetiOS \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -derivedDataPath "$RUNNER_TEMP/CheatSheet-iOS-DD" \
+            CODE_SIGNING_ALLOWED=NO

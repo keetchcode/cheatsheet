@@ -8,30 +8,12 @@ struct CheatSheetWidgetView: View {
     let entry: CheatSheetEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: family.verticalSpacing) {
-            HStack(spacing: 8) {
-                Image(systemName: "text.page.fill")
-                    .font(.headline)
-                    .foregroundStyle(renderingMode == .fullColor ? entry.note.tint : .white)
-                    .widgetAccentable()
-                    .accessibilityHidden(true)
-
-                Text(entry.note.displayTitle)
-                    .font(family.titleFont(for: entry.note.fontStyle))
-                    .foregroundStyle(primaryTextStyle)
-                    .lineLimit(family == .systemSmall ? 1 : 2)
-                    .minimumScaleFactor(0.8)
-
-                Spacer(minLength: 0)
+        Group {
+            if let note = entry.note {
+                noteView(note)
+            } else {
+                emptyState
             }
-
-            VStack(alignment: .leading, spacing: family.lineSpacing) {
-                ForEach(entry.note.displayLines(limit: family.lineLimit)) { line in
-                    WidgetLineView(line: line, fontStyle: entry.note.fontStyle)
-                }
-            }
-
-            Spacer(minLength: 0)
         }
         .padding(family.contentPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -39,6 +21,61 @@ struct CheatSheetWidgetView: View {
             widgetBackground
         }
         .accessibilityElement(children: .combine)
+    }
+
+    private func noteView(_ note: CheatSheetNote) -> some View {
+        VStack(alignment: .leading, spacing: family.verticalSpacing) {
+            header(title: note.displayTitle, systemImage: "text.page.fill", tint: note.tint, fontStyle: note.fontStyle)
+
+            VStack(alignment: .leading, spacing: family.lineSpacing) {
+                ForEach(note.displayLines(limit: family.lineLimit)) { line in
+                    WidgetLineView(line: line, fontStyle: note.fontStyle)
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(alignment: .leading, spacing: family.verticalSpacing) {
+            header(
+                title: "No Widget Note",
+                systemImage: "note.text.badge.plus",
+                tint: CheatSheetPalette.blue.color,
+                fontStyle: .rounded
+            )
+
+            Text("Pin or create a note in CheatSheet to show it here.")
+                .font(.system(.caption, design: .rounded).weight(.medium))
+                .foregroundStyle(primaryTextStyle)
+                .lineLimit(family == .systemSmall ? 3 : 5)
+
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func header(
+        title: String,
+        systemImage: String,
+        tint: Color,
+        fontStyle: CheatSheetFontStyle
+    ) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: systemImage)
+                .font(.headline)
+                .foregroundStyle(renderingMode == .fullColor ? tint : .white)
+                .widgetAccentable()
+                .accessibilityHidden(true)
+
+            Text(title)
+                .font(family.titleFont(for: fontStyle))
+                .foregroundStyle(primaryTextStyle)
+                .lineLimit(family == .systemSmall ? 1 : 2)
+                .minimumScaleFactor(0.8)
+
+            Spacer(minLength: 0)
+        }
     }
 
     @ViewBuilder

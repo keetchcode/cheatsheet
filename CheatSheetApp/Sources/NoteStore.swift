@@ -1,7 +1,25 @@
 import Foundation
 import Observation
+import OSLog
 import SwiftUI
 import WidgetKit
+
+private let noteStoreLogger = Logger(subsystem: "com.wesleykeetch.wesleycheatsheet", category: "Persistence")
+
+enum PersistenceStatus: Equatable {
+    case ready
+    case saving
+    case saved(Date)
+    case loadFailed(String)
+    case saveFailed(String)
+
+    var isFailure: Bool {
+        switch self {
+        case .loadFailed, .saveFailed: true
+        case .ready, .saving, .saved: false
+        }
+    }
+}
 
 @Observable
 @MainActor
@@ -12,6 +30,7 @@ final class NoteStore {
         }
     }
     var searchText = ""
+    private(set) var persistenceStatus: PersistenceStatus = .ready
     private(set) var activeNotes: [CheatSheetNote] = []
     private(set) var archivedNotes: [CheatSheetNote] = []
 
@@ -46,15 +65,28 @@ final class NoteStore {
         self.now = now
         persistenceWorker = NotePersistenceWorker(repository: repository)
 
-        let storedNotes = repository.loadNotes()
+        let storedNotes: [CheatSheetNote]
+        let loadError: (any Error)?
+        do {
+            storedNotes = try repository.loadNotes()
+            loadError = nil
+            persistenceStatus = .ready
+        } catch {
+            storedNotes = CheatSheetNote.starterNotes
+            loadError = error
+        }
+
         notes = Self.removingExpiredArchivedNotes(from: storedNotes, now: now())
         rebuildNoteCaches()
         selectedNoteID = activeNotes.first(where: \.isPinned)?.id ?? activeNotes.first?.id ?? archivedNotes.first?.id
         lastReloadedWidgetNote = Self.widgetNote(in: notes)
+        if let loadError {
+            handleLoadFailure(loadError)
+        }
         reloadWidgetTimelines()
 
         if notes != storedNotes {
-            persist(waitForSave: true)
+            persistImmediately()
         }
     }
 
@@ -176,36 +208,92 @@ final class NoteStore {
     }
 
     func flushPendingChanges() {
+        let snapshot = snapshotForPersistence()
+        saveTask?.cancel()
+        startSaveTask(for: snapshot)
+    }
+
+    func flushPendingChanges() async {
+        let snapshot = snapshotForPersistence()
         saveTask?.cancel()
         saveTask = nil
-        persist(waitForSave: true)
+        await persist(snapshot)
     }
 
     private func schedulePersist() {
+        let snapshot = snapshotForPersistence()
         saveTask?.cancel()
-        saveTask = Task { @MainActor [weak self] in
-            do {
-                try await Task.sleep(for: .milliseconds(400))
-            } catch {
-                return
-            }
-
-            self?.persist()
-            self?.saveTask = nil
-        }
+        startSaveTask(for: snapshot, delay: .milliseconds(400))
     }
 
     private func persistImmediately() {
+        let snapshot = snapshotForPersistence()
         saveTask?.cancel()
-        saveTask = nil
-        persist(waitForSave: false)
+        startSaveTask(for: snapshot)
     }
 
-    private func persist(waitForSave: Bool = false) {
+    private func startSaveTask(for snapshot: [CheatSheetNote], delay: Duration? = nil) {
+        persistenceStatus = .saving
+        saveTask = Task { [weak self, persistenceWorker] in
+            do {
+                if let delay {
+                    try await Task.sleep(for: delay)
+                }
+
+                try await persistenceWorker.save(snapshot)
+                self?.handleSaveSuccess(for: snapshot)
+            } catch is CancellationError {
+                return
+            } catch {
+                self?.handleSaveFailure(error)
+                return
+            }
+        }
+    }
+
+    private func persist(_ snapshot: [CheatSheetNote]) async {
+        persistenceStatus = .saving
+
+        do {
+            try await persistenceWorker.save(snapshot)
+            handleSaveSuccess(for: snapshot)
+        } catch {
+            handleSaveFailure(error)
+        }
+    }
+
+    private func snapshotForPersistence() -> [CheatSheetNote] {
         purgeExpiredArchivedNotes()
         ensureSelectionIsValid()
-        persistenceWorker.save(notes, waitForSave: waitForSave)
-        reloadWidgetTimelinesIfNeeded(for: notes)
+        return notes
+    }
+
+    private func handleLoadFailure(_ error: Error) {
+        let message = Self.storageMessage(for: error)
+        persistenceStatus = .loadFailed(message)
+        noteStoreLogger.error("Failed to load notes: \(message, privacy: .public)")
+    }
+
+    private func handleSaveSuccess(for snapshot: [CheatSheetNote]) {
+        persistenceStatus = .saved(now())
+        reloadWidgetTimelinesIfNeeded(for: snapshot)
+        saveTask = nil
+    }
+
+    private func handleSaveFailure(_ error: Error) {
+        let message = Self.storageMessage(for: error)
+        persistenceStatus = .saveFailed(message)
+        noteStoreLogger.error("Failed to save notes: \(message, privacy: .public)")
+        saveTask = nil
+    }
+
+    private static func storageMessage(for error: Error) -> String {
+        if let localizedError = error as? LocalizedError,
+           let description = localizedError.errorDescription {
+            return description
+        }
+
+        return error.localizedDescription
     }
 
     private func reloadWidgetTimelinesIfNeeded(for notes: [CheatSheetNote]) {
@@ -261,23 +349,14 @@ final class NoteStore {
     }
 }
 
-private final class NotePersistenceWorker: @unchecked Sendable {
+private actor NotePersistenceWorker {
     private let repository: any CheatSheetNoteRepository
-    private let queue = DispatchQueue(label: "com.wesleykeetch.wesleycheatsheet.persistence", qos: .utility)
 
     init(repository: any CheatSheetNoteRepository) {
         self.repository = repository
     }
 
-    func save(_ notes: [CheatSheetNote], waitForSave: Bool) {
-        if waitForSave {
-            queue.sync {
-                repository.saveNotes(notes)
-            }
-        } else {
-            queue.async {
-                self.repository.saveNotes(notes)
-            }
-        }
+    func save(_ notes: [CheatSheetNote]) throws {
+        try repository.saveNotes(notes)
     }
 }
