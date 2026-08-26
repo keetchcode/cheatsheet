@@ -1,5 +1,7 @@
 # CheatSheet Audit Report
 
+> Historical audit snapshot. See `../CODE_AUDIT.md` for current status.
+
 Date: 2026-06-29
 Scope: `CheatSheetApp`, `Shared`, `CheatSheetWidgets`, `project.yml`, app plist/entitlement configuration.
 

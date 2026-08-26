@@ -12,7 +12,7 @@ struct CheatSheetApp: App {
 
     var body: some Scene {
         #if os(macOS)
-        WindowGroup("CheatSheet", id: "main") {
+        Window("CheatSheet", id: "main") {
             ContentView(store: store)
                 .frame(minWidth: AppDesign.windowMinimumWidth, minHeight: AppDesign.windowMinimumHeight)
         }

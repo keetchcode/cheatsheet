@@ -28,6 +28,25 @@ if (( ${#device_classes} == 0 )); then
     device_classes=(iphone-6.9 ipad-13)
 fi
 
+run_with_timeout() {
+    local timeout_seconds=$1
+    shift
+
+    "$@" &
+    local command_pid=$!
+    (
+        sleep "$timeout_seconds"
+        kill "$command_pid" >/dev/null 2>&1 || true
+    ) &
+    local watchdog_pid=$!
+
+    wait "$command_pid" >/dev/null 2>&1
+    local command_status=$?
+    kill "$watchdog_pid" >/dev/null 2>&1 || true
+    wait "$watchdog_pid" >/dev/null 2>&1 || true
+    return "$command_status"
+}
+
 if ! command -v xcodegen >/dev/null 2>&1; then
     print -u2 "error: xcodegen is required (brew install xcodegen)"
     exit 1
@@ -103,11 +122,17 @@ for device_class in "${device_classes[@]}"; do
     chmod 777 "$staging_dir"
 
     print "Booting $device_name ($udid)..."
-    xcrun simctl bootstatus "$udid" -b >/dev/null 2>&1 || xcrun simctl boot "$udid" || true
-    xcrun simctl bootstatus "$udid" -b >/dev/null 2>&1 || true
+    run_with_timeout 30 xcrun simctl bootstatus "$udid" -b || xcrun simctl boot "$udid" || true
+    run_with_timeout 30 xcrun simctl bootstatus "$udid" -b || true
+
+    # Simulator accessibility settings persist across unrelated test runs.
+    # Store captures use the standard content size and contrast so a previous
+    # accessibility QA pass cannot silently crop otherwise valid screenshots.
+    xcrun simctl ui "$udid" content_size large >/dev/null 2>&1 || true
+    xcrun simctl ui "$udid" increase_contrast disabled >/dev/null 2>&1 || true
 
     # A clean, Apple-standard status bar across the whole set.
-    xcrun simctl status_bar "$udid" override \
+    run_with_timeout 10 xcrun simctl status_bar "$udid" override \
         --time "9:41" \
         --dataNetwork wifi \
         --wifiMode active \
@@ -115,7 +140,7 @@ for device_class in "${device_classes[@]}"; do
         --cellularMode active \
         --cellularBars 4 \
         --batteryState charged \
-        --batteryLevel 100 >/dev/null 2>&1 || true
+        --batteryLevel 100 || true
 
     # Two passes. Most of the set uses the app's dark palette, which suits the
     # developer audience, but shipping one light shot shows the app adapts.

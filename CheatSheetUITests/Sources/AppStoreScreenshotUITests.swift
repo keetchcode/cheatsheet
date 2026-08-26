@@ -18,7 +18,7 @@ final class AppStoreScreenshotUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-        let isMissingOutputDirectory = outputDirectory == nil
+        let isMissingOutputDirectory = screenshotOutputDirectory == nil
         try XCTSkipIf(
             isMissingOutputDirectory,
             "Screenshot capture only runs when CHEATSHEET_SCREENSHOT_DIR is set."
@@ -33,17 +33,17 @@ final class AppStoreScreenshotUITests: XCTestCase {
         if isPad(app) {
             // Regular width opens straight into sidebar + editor, so the hero
             // shot and the list shot are the same screen.
-            capture("01-hero", app: app)
+            captureScreenshot(named: "01-hero")
         } else {
-            capture("03-list", app: app)
+            captureScreenshot(named: "03-list")
             openNote("Git Rescue", in: app)
-            capture("01-hero", app: app)
+            captureScreenshot(named: "01-hero")
             goBackToList(in: app)
         }
 
         openNote("Ship Checklist", in: app)
         dismissWidgetHint(in: app)
-        capture("04-checklist", app: app)
+        captureScreenshot(named: "04-checklist")
         goBackToList(in: app)
 
         // Styling reads best as a finished note rather than an open menu: a
@@ -51,7 +51,7 @@ final class AppStoreScreenshotUITests: XCTestCase {
         openNote("Xcode Shortcuts", in: app)
         dismissWidgetHint(in: app)
         chooseFont("Serif", in: app)
-        capture("05-style", app: app)
+        captureScreenshot(named: "05-style")
 
         app.terminate()
 
@@ -61,7 +61,7 @@ final class AppStoreScreenshotUITests: XCTestCase {
             "Expected onboarding on a reset launch."
         )
         settle()
-        capture("07-open-source", app: onboardingApp)
+        captureScreenshot(named: "07-open-source")
     }
 
     // MARK: - Light set
@@ -72,9 +72,9 @@ final class AppStoreScreenshotUITests: XCTestCase {
         let app = launchApp()
 
         if isPad(app) {
-            capture("06-light", app: app)
+            captureScreenshot(named: "06-light")
         } else if search(for: "git", in: app) {
-            capture("06-search", app: app)
+            captureScreenshot(named: "06-search")
         } else {
             XCTFail("Expected the iPhone search field to be available.")
         }
@@ -117,8 +117,17 @@ final class AppStoreScreenshotUITests: XCTestCase {
 
     private func openNote(_ title: String, in app: XCUIApplication) {
         let cell = app.cells.containing(.staticText, identifier: title).firstMatch
-        let target = cell.exists ? cell : app.staticTexts[title]
-        XCTAssertTrue(target.waitForExistence(timeout: 10), "Expected a row for \(title).")
+        var target = cell.exists ? cell : app.staticTexts[title]
+
+        if !isPad(app) {
+            for _ in 0..<4 where !target.isHittable {
+                app.swipeUp()
+                Thread.sleep(forTimeInterval: 0.35)
+                target = cell.exists ? cell : app.staticTexts[title]
+            }
+        }
+
+        XCTAssertTrue(target.waitForExistence(timeout: 10) && target.isHittable, "Expected a visible row for \(title).")
         target.tap()
         settle()
     }
@@ -165,11 +174,32 @@ final class AppStoreScreenshotUITests: XCTestCase {
         var field = app.searchFields.firstMatch
 
         if !field.waitForExistence(timeout: 5) {
+            // A navigation-bar drawer can be collapsed until the list is
+            // pulled down on newer iOS releases.
+            app.swipeDown()
+            settle()
+            field = app.searchFields.firstMatch
+        }
+
+        if !field.exists {
             let searchButton = app.buttons["Search"]
             if searchButton.waitForExistence(timeout: 3), searchButton.isHittable {
                 searchButton.tap()
                 settle()
                 field = app.searchFields.firstMatch
+            }
+        }
+
+        if !field.exists {
+            let moreButton = app.buttons["More"]
+            if moreButton.waitForExistence(timeout: 3), moreButton.isHittable {
+                moreButton.tap()
+                let searchButton = app.buttons["Search"]
+                if searchButton.waitForExistence(timeout: 3), searchButton.isHittable {
+                    searchButton.tap()
+                    settle()
+                    field = app.searchFields.firstMatch
+                }
             }
         }
 
@@ -192,37 +222,4 @@ final class AppStoreScreenshotUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 1.4)
     }
 
-    // MARK: - Capture
-
-    private func capture(_ name: String, app: XCUIApplication) {
-        let screenshot = XCUIScreen.main.screenshot()
-
-        let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
-
-        guard let outputDirectory else { return }
-
-        do {
-            try FileManager.default.createDirectory(
-                at: outputDirectory,
-                withIntermediateDirectories: true
-            )
-            try screenshot.pngRepresentation.write(
-                to: outputDirectory.appending(path: "\(name).png")
-            )
-        } catch {
-            XCTFail("Could not write \(name).png to \(outputDirectory.path): \(error)")
-        }
-    }
-
-    private var outputDirectory: URL? {
-        guard let path = ProcessInfo.processInfo.environment["CHEATSHEET_SCREENSHOT_DIR"],
-              !path.isEmpty else {
-            return nil
-        }
-
-        return URL(fileURLWithPath: path, isDirectory: true)
-    }
 }

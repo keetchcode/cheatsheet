@@ -62,13 +62,16 @@ public final class SwiftDataCheatSheetNoteRepository: CheatSheetNoteRepository, 
             return notes
         }
 
+        // Once SwiftData has held authoritative data, an empty fetch means the
+        // user intentionally deleted every note. Never re-import stale legacy
+        // defaults (or their first-run starter notes) after that point.
+        if metadataRepository?.hasInitializedSwiftDataStore == true {
+            return []
+        }
+
         if let legacyNotes = try legacyRepository?.loadNotes(), legacyNotes.isEmpty == false {
             try saveNotes(legacyNotes)
             return legacyNotes
-        }
-
-        if metadataRepository?.hasInitializedSwiftDataStore == true {
-            return []
         }
 
         let starterNotes = CheatSheetNote.starterNotes

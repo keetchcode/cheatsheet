@@ -14,7 +14,7 @@ final class WidgetScreenshotUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-        let isMissingOutputDirectory = outputDirectory == nil
+        let isMissingOutputDirectory = screenshotOutputDirectory == nil
         try XCTSkipIf(
             isMissingOutputDirectory,
             "Screenshot capture only runs when CHEATSHEET_SCREENSHOT_DIR is set."
@@ -28,16 +28,16 @@ final class WidgetScreenshotUITests: XCTestCase {
         settle()
 
         enterJiggleMode()
-        capture("debug-01-jiggle")
+        captureScreenshot(named: "debug-01-jiggle")
 
         openWidgetGallery()
-        capture("debug-02-gallery")
+        captureScreenshot(named: "debug-02-gallery")
 
         chooseCheatSheetWidget()
-        capture("debug-03-widget-page")
+        captureScreenshot(named: "debug-03-widget-page")
 
         selectMediumSize()
-        capture("debug-04-medium")
+        captureScreenshot(named: "debug-04-medium")
 
         addWidget()
         settle()
@@ -46,7 +46,7 @@ final class WidgetScreenshotUITests: XCTestCase {
         settle()
         settle()
 
-        capture("02-widget")
+        captureScreenshot(named: "02-widget")
     }
 
     // MARK: - Home Screen flow
@@ -104,7 +104,7 @@ final class WidgetScreenshotUITests: XCTestCase {
             : springboard.staticTexts["CheatSheet"].firstMatch
 
         XCTAssertTrue(target.waitForExistence(timeout: 10), "CheatSheet is missing from the widget gallery.")
-        capture("debug-02b-results")
+        captureScreenshot(named: "debug-02b-results")
         tap(target)
         settle()
     }
@@ -162,37 +162,4 @@ final class WidgetScreenshotUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 1.6)
     }
 
-    // MARK: - Capture
-
-    private func capture(_ name: String) {
-        let screenshot = XCUIScreen.main.screenshot()
-
-        let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
-
-        guard let outputDirectory else { return }
-
-        do {
-            try FileManager.default.createDirectory(
-                at: outputDirectory,
-                withIntermediateDirectories: true
-            )
-            try screenshot.pngRepresentation.write(
-                to: outputDirectory.appending(path: "\(name).png")
-            )
-        } catch {
-            XCTFail("Could not write \(name).png to \(outputDirectory.path): \(error)")
-        }
-    }
-
-    private var outputDirectory: URL? {
-        guard let path = ProcessInfo.processInfo.environment["CHEATSHEET_SCREENSHOT_DIR"],
-              !path.isEmpty else {
-            return nil
-        }
-
-        return URL(fileURLWithPath: path, isDirectory: true)
-    }
 }

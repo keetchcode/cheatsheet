@@ -14,45 +14,43 @@ struct TrashNoteView: View {
                 .glassCompatibleButtonStyle()
                 .help("Return to active notes")
 
-            LiquidGlassGroup(spacing: AppDesign.panelSpacing) {
-                VStack(alignment: .leading, spacing: AppDesign.panelSpacing) {
-                    Label("In Trash", systemImage: "archivebox")
-                        .font(.title2)
-                        .bold()
+            VStack(alignment: .leading, spacing: AppDesign.panelSpacing) {
+                Label("In Trash", systemImage: "archivebox")
+                    .font(.title2)
+                    .bold()
 
-                    Text(note.trashStatusText)
+                Text(note.trashStatusText)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Divider()
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(note.displayTitle)
+                        .font(.headline)
+
+                    Text(note.body.notePreviewLine)
                         .font(.callout)
                         .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(3)
+                }
 
-                    Divider()
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(note.displayTitle)
-                            .font(.headline)
-
-                        Text(note.body.notePreviewLine)
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(3)
+                ViewThatFits(in: .horizontal) {
+                    HStack {
+                        restoreButton
+                        deleteNowButton
                     }
 
-                    ViewThatFits(in: .horizontal) {
-                        HStack {
-                            restoreButton
-                            deleteNowButton
-                        }
-
-                        VStack(alignment: .leading, spacing: 10) {
-                            restoreButton
-                            deleteNowButton
-                        }
+                    VStack(alignment: .leading, spacing: 10) {
+                        restoreButton
+                        deleteNowButton
                     }
                 }
-                .padding(AppDesign.panelPadding)
-                .liquidGlassPanel(tint: Color(hex: note.tintHex), cornerRadius: 20)
-                .frame(maxWidth: 420, alignment: .leading)
             }
+            .padding(AppDesign.panelPadding)
+            .noteContentSurface(tint: Color(hex: note.tintHex), cornerRadius: 20)
+            .frame(maxWidth: 420, alignment: .leading)
 
             Spacer()
         }

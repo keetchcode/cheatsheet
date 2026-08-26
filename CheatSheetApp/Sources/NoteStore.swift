@@ -26,6 +26,7 @@ enum PersistenceStatus: Equatable {
 final class NoteStore {
     var notes: [CheatSheetNote] {
         didSet {
+            guard !isApplyingContentEdit else { return }
             rebuildNoteCaches()
         }
     }
@@ -61,6 +62,8 @@ final class NoteStore {
     private(set) var isPersistenceSuspended = false
     @ObservationIgnored
     private var saveGeneration = 0
+    @ObservationIgnored
+    private var isApplyingContentEdit = false
 
     init(
         repository: any CheatSheetNoteRepository = CheatSheetNoteRepositoryFactory.live(),
@@ -132,9 +135,20 @@ final class NoteStore {
             self.notes.first { $0.id == id } ?? initialNote
         } set: { updatedNote in
             guard let index = self.notes.firstIndex(where: { $0.id == id }) else { return }
+            let previousNote = self.notes[index]
             var note = updatedNote
             note.updatedAt = self.now()
+            self.isApplyingContentEdit = true
             self.notes[index] = note
+            self.isApplyingContentEdit = false
+
+            if note.isPinned != previousNote.isPinned || note.archivedAt != previousNote.archivedAt {
+                self.rebuildNoteCaches()
+            } else if let activeIndex = self.activeNotes.firstIndex(where: { $0.id == id }) {
+                self.activeNotes[activeIndex] = note
+            } else if let archivedIndex = self.archivedNotes.firstIndex(where: { $0.id == id }) {
+                self.archivedNotes[archivedIndex] = note
+            }
             self.schedulePersist()
         }
     }
@@ -305,19 +319,19 @@ final class NoteStore {
         let message = Self.storageMessage(for: error)
         persistenceStatus = .loadFailed(message)
         isPersistenceSuspended = true
-        noteStoreLogger.error("Failed to load notes: \(message, privacy: .public)")
+        noteStoreLogger.error("Failed to load notes: \(message, privacy: .private)")
     }
 
     private func handleSaveSuccess(for snapshot: [CheatSheetNote], generation: Int) {
-        reloadWidgetTimelinesIfNeeded(for: snapshot)
         guard generation == saveGeneration else { return }
+        reloadWidgetTimelinesIfNeeded(for: snapshot)
         persistenceStatus = .saved(now())
         saveTask = nil
     }
 
     private func handleSaveFailure(_ error: Error, generation: Int) {
         let message = Self.storageMessage(for: error)
-        noteStoreLogger.error("Failed to save notes: \(message, privacy: .public)")
+        noteStoreLogger.error("Failed to save notes: \(message, privacy: .private)")
         guard generation == saveGeneration else { return }
         persistenceStatus = .saveFailed(message)
         saveTask = nil
@@ -362,11 +376,9 @@ final class NoteStore {
     }
 
     private func purgeExpiredArchivedNotes() {
-        let cutoff = now().addingTimeInterval(-NoteTrashPolicy.retentionInterval)
-        notes.removeAll { note in
-            guard let archivedAt = note.archivedAt else { return false }
-            return archivedAt <= cutoff
-        }
+        let retainedNotes = Self.removingExpiredArchivedNotes(from: notes, now: now())
+        guard retainedNotes.count != notes.count else { return }
+        notes = retainedNotes
     }
 
     private func ensureSelectionIsValid() {
@@ -385,7 +397,7 @@ final class NoteStore {
     }
 }
 
-    private actor NotePersistenceWorker {
+private actor NotePersistenceWorker {
     private let repository: any CheatSheetNoteRepository
 
     init(repository: any CheatSheetNoteRepository) {

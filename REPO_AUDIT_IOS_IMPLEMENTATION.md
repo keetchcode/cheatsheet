@@ -1,5 +1,7 @@
 # REPO_AUDIT_IOS Implementation
 
+> Historical implementation snapshot. See `CODE_AUDIT.md` for current status.
+
 Date: 2026-07-09
 
 ## Work Summary

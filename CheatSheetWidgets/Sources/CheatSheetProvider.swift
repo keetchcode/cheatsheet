@@ -33,7 +33,7 @@ struct CheatSheetProvider: TimelineProvider {
             }
             return note
         } catch {
-            widgetLogger.error("Unable to load widget snapshot for \(source, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            widgetLogger.error("Unable to load widget snapshot for \(source, privacy: .public): \(error.localizedDescription, privacy: .private)")
             return nil
         }
     }

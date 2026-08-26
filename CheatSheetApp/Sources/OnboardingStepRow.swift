@@ -10,7 +10,7 @@ struct OnboardingStepRow: View {
             Image(systemName: symbol)
                 .font(.headline)
                 .frame(width: 32, height: 32)
-                .liquidGlassPanel(tint: .white, cornerRadius: 16)
+                .background(.secondary.opacity(0.1), in: Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 3) {

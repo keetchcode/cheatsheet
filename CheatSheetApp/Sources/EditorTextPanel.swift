@@ -13,29 +13,10 @@ struct EditorTextPanel: View {
                 .lineSpacing(5)
                 .scrollContentBackground(.hidden)
                 .padding(AppDesign.editorTextPadding)
-                .editorPanelSurface(tint: Color(hex: note.tintHex))
+                .noteContentSurface(tint: Color(hex: note.tintHex), cornerRadius: AppDesign.editorCornerRadius)
                 #if os(iOS)
                 .scrollDismissesKeyboard(.interactively)
                 #endif
         }
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func editorPanelSurface(tint: Color) -> some View {
-        #if os(iOS)
-        self
-            .background(
-                Color(uiColor: .secondarySystemGroupedBackground),
-                in: RoundedRectangle(cornerRadius: AppDesign.editorCornerRadius, style: .continuous)
-            )
-            .overlay {
-                RoundedRectangle(cornerRadius: AppDesign.editorCornerRadius, style: .continuous)
-                    .stroke(Color(uiColor: .separator).opacity(0.16), lineWidth: 1)
-            }
-        #else
-        self.liquidGlassPanel(tint: tint, cornerRadius: AppDesign.editorCornerRadius)
-        #endif
     }
 }

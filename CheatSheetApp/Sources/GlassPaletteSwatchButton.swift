@@ -11,6 +11,7 @@ struct GlassPaletteSwatchButton: View {
             Circle()
                 .fill(swatch.color)
                 .frame(width: 16, height: 16)
+                .scaleEffect(isSelected ? 1.12 : 1)
                 .overlay {
                     selectedIndicator
                 }
@@ -26,6 +27,7 @@ struct GlassPaletteSwatchButton: View {
         .accessibilityValue(isSelected ? "Selected" : "Not selected")
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
         .help("Set \(swatch.displayName.lowercased()) note color")
+        .animation(.snappy(duration: 0.22), value: isSelected)
     }
 
     @ViewBuilder

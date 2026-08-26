@@ -180,6 +180,45 @@ struct NoteRepositoryTests {
         #expect(try sut.loadNotes().isEmpty)
     }
 
+    @Test func swiftDataRepositoryDoesNotRestoreStaleLegacyNotesAfterDeletingEverything() throws {
+        let container = try SwiftDataCheatSheetNoteRepository.makeInMemoryContainer()
+        let suite = "CheatSheetTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let legacyNotes = [CheatSheetNote(title: "Legacy", body: "- retained copy")]
+        let metadataRepository = CheatSheetStoreMetadataRepository(defaults: defaults)
+        let sut = SwiftDataCheatSheetNoteRepository(
+            container: container,
+            legacyRepository: SpyLegacyRepository(notes: legacyNotes),
+            metadataRepository: metadataRepository
+        )
+
+        #expect(try sut.loadNotes() == legacyNotes)
+        try sut.saveNotes([])
+
+        #expect(metadataRepository.hasInitializedSwiftDataStore)
+        #expect(try sut.loadNotes().isEmpty)
+    }
+
+    @Test func initializedEmptySwiftDataStoreIgnoresLegacyFirstRunStarterNotes() throws {
+        let container = try SwiftDataCheatSheetNoteRepository.makeInMemoryContainer()
+        let suite = "CheatSheetTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let legacyRepository = UserDefaultsCheatSheetNoteRepository(defaults: defaults)
+        let metadataRepository = CheatSheetStoreMetadataRepository(defaults: defaults)
+        let sut = SwiftDataCheatSheetNoteRepository(
+            container: container,
+            legacyRepository: legacyRepository,
+            metadataRepository: metadataRepository
+        )
+
+        try sut.saveNotes([])
+
+        #expect(try legacyRepository.loadNotes() == CheatSheetNote.starterNotes)
+        #expect(try sut.loadNotes().isEmpty)
+    }
+
     @Test func factoryRefusesStaleLegacyFallbackAfterSwiftDataInitialization() throws {
         let suite = "CheatSheetTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))

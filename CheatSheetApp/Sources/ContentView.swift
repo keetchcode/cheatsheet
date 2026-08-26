@@ -14,7 +14,7 @@ struct ContentView: View {
     @State private var compactPath: [CheatSheetNote.ID] = []
 
     var body: some View {
-        rootContent
+        adaptiveContent
             .disabled(store.isPersistenceSuspended)
             .safeAreaInset(edge: .top, spacing: 0) {
                 PersistenceStatusBanner(
@@ -36,6 +36,22 @@ struct ContentView: View {
             .sheet(isPresented: $isShowingOnboarding) {
                 OnboardingView()
             }
+    }
+
+    @ViewBuilder
+    private var adaptiveContent: some View {
+        #if os(iOS)
+        rootContent
+            .onChange(of: horizontalSizeClass) { _, newSizeClass in
+                if newSizeClass == .compact, let selectedNoteID = store.selectedNoteID {
+                    compactPath = [selectedNoteID]
+                } else {
+                    compactPath.removeAll()
+                }
+            }
+        #else
+        rootContent
+        #endif
     }
 
     @ViewBuilder
@@ -161,7 +177,7 @@ struct ContentView: View {
             }
         } else if let note = store.binding(for: noteID) {
             editorDetail(note: note, selectedNoteID: noteID)
-                .navigationTitle(note.wrappedValue.displayTitle)
+                .navigationTitle("")
                 .navigationBarTitleDisplayMode(.inline)
                 .onAppear {
                     store.selectedNoteID = noteID

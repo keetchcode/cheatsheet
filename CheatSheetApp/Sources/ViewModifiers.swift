@@ -40,6 +40,31 @@ extension View {
         }
         #endif
     }
+
+    /// A calm, readable surface for note content. Liquid Glass remains on
+    /// controls and navigation, where its depth communicates interactivity.
+    func noteContentSurface(tint: Color, cornerRadius: CGFloat) -> some View {
+        modifier(NoteContentSurfaceModifier(tint: tint, cornerRadius: cornerRadius))
+    }
+}
+
+private struct NoteContentSurfaceModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+    let tint: Color
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background(.regularMaterial, in: .rect(cornerRadius: cornerRadius))
+            .background(
+                tint.opacity(colorScheme == .dark ? 0.16 : 0.09),
+                in: .rect(cornerRadius: cornerRadius)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(.primary.opacity(colorScheme == .dark ? 0.14 : 0.08), lineWidth: 1)
+            }
+    }
 }
 
 private struct LiquidGlassPanelModifier: ViewModifier {

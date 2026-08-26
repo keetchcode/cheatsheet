@@ -1,8 +1,10 @@
 # REPO_AUDIT_IOS.md
 
+> Historical snapshot. See `CODE_AUDIT.md` for the current review and remediation status.
+
 Audit date: 2026-07-09
 
-Scope: full repository static architecture and codebase audit for the macOS, iOS, iPadOS, and WidgetKit targets in `/Users/wesleykeetch/Documents/Developer/CheatSheet`.
+Scope: full repository static architecture and codebase audit for the macOS, iOS, iPadOS, and WidgetKit targets in this repository.
 
 Verification performed:
 

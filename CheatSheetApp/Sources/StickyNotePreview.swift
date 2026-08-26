@@ -39,7 +39,7 @@ struct StickyNotePreview: View {
         .padding(22)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .aspectRatio(1.08, contentMode: .fit)
-        .liquidGlassPanel(tint: Color(hex: note.tintHex), cornerRadius: AppDesign.previewCornerRadius)
+        .noteContentSurface(tint: Color(hex: note.tintHex), cornerRadius: AppDesign.previewCornerRadius)
         .accessibilityElement(children: .combine)
     }
 }
