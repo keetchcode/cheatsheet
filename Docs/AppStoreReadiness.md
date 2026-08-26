@@ -2,7 +2,7 @@
 
 Updated: August 26, 2026
 
-This is the current release checklist for the macOS, iOS, iPadOS, and WidgetKit targets. `project.yml` is the configuration source of truth. Historical analysis lives in the clearly labeled audit snapshots; current engineering findings live in `CODE_AUDIT.md`.
+This is the current release checklist for the macOS, iOS, iPadOS, and WidgetKit targets. `project.yml` is the configuration source of truth.
 
 ## Product scope
 

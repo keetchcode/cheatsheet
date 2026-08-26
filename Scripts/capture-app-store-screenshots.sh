@@ -6,7 +6,7 @@
 # Each device class runs the AppStoreScreenshotUITests suite on a simulator
 # whose native screen size already equals the pixel size App Store Connect
 # requires, so nothing is ever scaled. Raw PNGs land in
-# AppStoreScreenshots/raw/<device-class>/.
+# Docs/AppStoreScreenshots/raw/<device-class>/.
 #
 # Like Scripts/verify-macos.sh, the Xcode project is generated under /private/tmp:
 # a checkout inside a File Provider-managed Documents folder can make xcodebuild
@@ -15,7 +15,7 @@
 set -euo pipefail
 
 repo_root=${0:A:h:h}
-output_root="$repo_root/AppStoreScreenshots/raw"
+output_root="$repo_root/Docs/AppStoreScreenshots/raw"
 
 typeset -A device_names
 device_names=(

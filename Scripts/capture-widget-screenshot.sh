@@ -12,7 +12,7 @@ repo_root=${0:A:h:h}
 device_name=${1:-"iPhone 17 Pro Max"}
 device_class=${2:-iphone-6.9}
 bundle_id="com.wesleykeetch.wesleycheatsheet"
-capture_dir="$repo_root/AppStoreScreenshots/raw/$device_class"
+capture_dir="$repo_root/Docs/AppStoreScreenshots/raw/$device_class"
 
 if ! command -v xcodegen >/dev/null 2>&1; then
     print -u2 "error: xcodegen is required (brew install xcodegen)"

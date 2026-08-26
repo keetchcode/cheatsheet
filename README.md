@@ -32,6 +32,9 @@ CheatSheetApp/       Shared SwiftUI app sources for macOS, iOS, and iPadOS
 CheatSheetWidgets/   WidgetKit extension sources for macOS and iOS/iPadOS
 Shared/              Shared model, parsing, storage, and persistence code
 CheatSheetTests/     Swift Testing coverage
+CheatSheetUITests/   End-to-end UI and screenshot automation
+Docs/                Product images and App Store release materials
+Scripts/             Reproducible build, test, and screenshot tooling
 project.yml          XcodeGen project definition
 ```
 

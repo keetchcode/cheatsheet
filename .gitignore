@@ -9,9 +9,9 @@ build/
 *.appex
 
 # Reproducible App Store screenshot intermediates. Keep the upload-ready
-# AppStoreScreenshots/final exports in version control.
-AppStoreScreenshots/raw/
-AppStoreScreenshots/contact-sheet.png
+# Docs/AppStoreScreenshots/final exports in version control.
+Docs/AppStoreScreenshots/raw/
+Docs/AppStoreScreenshots/contact-sheet.png
 
 # Xcode user state
 xcuserdata/

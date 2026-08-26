@@ -12,8 +12,8 @@ rather than a clever one. Keep them 3-7 words.
 
     Scripts/compose-app-store-screenshots.py
 
-Reads  AppStoreScreenshots/raw/<device-class>/
-Writes AppStoreScreenshots/final/<device-class>/
+Reads  Docs/AppStoreScreenshots/raw/<device-class>/
+Writes Docs/AppStoreScreenshots/final/<device-class>/
 """
 
 from __future__ import annotations
@@ -27,8 +27,9 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RAW_ROOT = REPO_ROOT / "AppStoreScreenshots" / "raw"
-FINAL_ROOT = REPO_ROOT / "AppStoreScreenshots" / "final"
+SCREENSHOT_ROOT = REPO_ROOT / "Docs" / "AppStoreScreenshots"
+RAW_ROOT = SCREENSHOT_ROOT / "raw"
+FINAL_ROOT = SCREENSHOT_ROOT / "final"
 
 # Brand anchor: the app's AccentColor asset, which is also CheatSheetPalette.blue.
 BRAND = (0x4B, 0x88, 0xFF)

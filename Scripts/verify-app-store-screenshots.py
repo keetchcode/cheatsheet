@@ -16,8 +16,9 @@ from pathlib import Path
 from PIL import Image
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-FINAL_ROOT = REPO_ROOT / "AppStoreScreenshots" / "final"
-CONTACT_SHEET = REPO_ROOT / "AppStoreScreenshots" / "contact-sheet.png"
+SCREENSHOT_ROOT = REPO_ROOT / "Docs" / "AppStoreScreenshots"
+FINAL_ROOT = SCREENSHOT_ROOT / "final"
+CONTACT_SHEET = SCREENSHOT_ROOT / "contact-sheet.png"
 
 # Apple's accepted portrait sizes per device class (2026 specifications).
 ACCEPTED = {
