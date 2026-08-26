@@ -8,11 +8,6 @@ build/
 *.app
 *.appex
 
-# Reproducible App Store screenshot intermediates. Keep the upload-ready
-# Docs/AppStoreScreenshots/final exports in version control.
-Docs/AppStoreScreenshots/raw/
-Docs/AppStoreScreenshots/contact-sheet.png
-
 # Xcode user state
 xcuserdata/
 *.xcuserstate
@@ -24,7 +19,3 @@ CheatSheet *.xcodeproj/
 # Swift Package Manager
 .build/
 .swiftpm/
-
-# Python tooling cache
-__pycache__/
-*.py[cod]

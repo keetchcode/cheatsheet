@@ -1,18 +1,10 @@
 # CheatSheet
 
-CheatSheet is a **100% free and open source** macOS, iOS, and iPadOS app for keeping short coding notes, checklists, and command reminders close by. It includes WidgetKit widgets so one pinned note can stay visible while you work.
+CheatSheet is a small, open-source macOS, iOS, and iPadOS app for keeping short coding notes, checklists, and command reminders close by. A WidgetKit extension keeps one pinned note visible while you work.
 
 ## Screenshots
 
 ![CheatSheet desktop with widget and pinned note](Docs/Images/cheatsheet-desktop-overview.png)
-
-![CheatSheet editor with note list, color controls, font picker, and pinned note state](Docs/Images/cheatsheet-editor.png)
-
-![CheatSheet onboarding with widget setup guidance](Docs/Images/cheatsheet-onboarding.png)
-
-![CheatSheet Trash view with back, restore, and delete actions](Docs/Images/cheatsheet-trash.png)
-
-![CheatSheet desktop widget pinned on the desktop](Docs/Images/cheatsheet-widget-desktop.png)
 
 ![CheatSheet widget in the macOS widget gallery showing the small, medium, and large sizes](Docs/Images/cheatsheet-widget-gallery.png)
 
@@ -32,9 +24,9 @@ CheatSheetApp/       Shared SwiftUI app sources for macOS, iOS, and iPadOS
 CheatSheetWidgets/   WidgetKit extension sources for macOS and iOS/iPadOS
 Shared/              Shared model, parsing, storage, and persistence code
 CheatSheetTests/     Swift Testing coverage
-CheatSheetUITests/   End-to-end UI and screenshot automation
-Docs/                Product images and App Store release materials
-Scripts/             Reproducible build, test, and screenshot tooling
+CheatSheetUITests/   End-to-end UI tests
+Docs/                Product images used by this README
+Scripts/             Reproducible build and verification tooling
 project.yml          XcodeGen project definition
 ```
 
