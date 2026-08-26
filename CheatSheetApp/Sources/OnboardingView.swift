@@ -19,6 +19,7 @@ struct OnboardingView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", action: finish)
+                        .accessibilityIdentifier("onboarding-done-button")
                 }
             }
         }

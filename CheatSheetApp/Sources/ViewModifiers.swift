@@ -58,7 +58,7 @@ private struct LiquidGlassPanelModifier: ViewModifier {
             }
         } else {
             content.background(
-                AppTheme.glassFallbackFill(for: colorScheme, tint: tint),
+                AppTheme.glassFallbackFill(for: colorScheme),
                 in: RoundedRectangle(cornerRadius: cornerRadius)
             )
         }
@@ -71,13 +71,13 @@ private struct LiquidGlassPanelModifier: ViewModifier {
             }
         } else {
             content.background(
-                AppTheme.glassFallbackFill(for: colorScheme, tint: tint),
+                AppTheme.glassFallbackFill(for: colorScheme),
                 in: RoundedRectangle(cornerRadius: cornerRadius)
             )
         }
         #else
         content.background(
-            AppTheme.glassFallbackFill(for: colorScheme, tint: tint),
+            AppTheme.glassFallbackFill(for: colorScheme),
             in: RoundedRectangle(cornerRadius: cornerRadius)
         )
         #endif

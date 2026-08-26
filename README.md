@@ -23,7 +23,7 @@ The app is intentionally simple:
 - Pick a note color and font style.
 - Move notes to Trash, restore them, or let them delete automatically after 30 days.
 - Store notes locally using SwiftData and app-group persistence.
-- Use Liquid Glass styling on macOS 26 with material fallbacks on macOS 15 through 25.
+- Use native Liquid Glass styling on macOS and iOS/iPadOS 26, with material fallbacks on earlier supported releases.
 
 ## Project Layout
 
@@ -39,7 +39,7 @@ project.yml          XcodeGen project definition
 
 ## Requirements
 
-- macOS 15 or later
+- macOS 15 or later, or iOS/iPadOS 18 or later
 - Xcode 26 or later
 - XcodeGen
 
@@ -79,8 +79,18 @@ Build and test the iOS/iPadOS app and widget:
 
 ```sh
 xcodegen generate --spec project.yml
-xcodebuild test -project CheatSheet.xcodeproj -scheme CheatSheetiOS -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath /tmp/CheatSheet-iOS-Test-DD CODE_SIGNING_ALLOWED=NO
-xcodebuild build -project CheatSheet.xcodeproj -scheme CheatSheetiOS -destination 'platform=iOS Simulator,name=iPad Pro 11-inch (M4)' -derivedDataPath /tmp/CheatSheet-iPad-DD CODE_SIGNING_ALLOWED=NO
+xcodebuild test -project CheatSheet.xcodeproj -scheme CheatSheetiOS -destination "id=$(Scripts/resolve-ios-simulator.sh)" -derivedDataPath /tmp/CheatSheet-iOS-Test-DD CODE_SIGNING_ALLOWED=NO
+```
+
+`Scripts/resolve-ios-simulator.sh` prints the newest available iPhone simulator
+UDID. Prefer it over a device name: a bare `name=iPhone 16` destination resolves
+to `OS:latest`, which fails once the installed runtime is newer than that device
+(iOS 26 ships the iPhone 17 family, not the iPhone 16).
+
+To check the iPad layout, pass an iPad destination explicitly:
+
+```sh
+xcodebuild build -project CheatSheet.xcodeproj -scheme CheatSheetiOS -destination 'platform=iOS Simulator,name=iPad Pro 11-inch (M4),OS=18.5' -derivedDataPath /tmp/CheatSheet-iPad-DD CODE_SIGNING_ALLOWED=NO
 ```
 
 ## Running The Widget
@@ -112,6 +122,17 @@ After running the app once, add the CheatSheet widget from the macOS widget gall
 ## Privacy
 
 CheatSheet stores notes locally on device. The app does not include analytics, accounts, sync, or network services.
+
+## Product Principles
+
+CheatSheet is deliberately narrow. Changes should make capturing or glancing at
+a short note faster without turning the app into a general document editor.
+
+- Local-first and useful without an account or network connection.
+- Plain-text-oriented, instant, and native to each Apple platform.
+- One pinned note for the widget rather than a complex widget dashboard.
+- No third-party dependency unless the platform cannot reasonably provide the feature.
+- No sync, collaboration, rich-document, or account system without a separate product decision.
 
 ## Contributing
 

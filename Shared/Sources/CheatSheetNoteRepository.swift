@@ -5,10 +5,11 @@ public protocol CheatSheetNoteRepository: Sendable {
     func saveNotes(_ notes: [CheatSheetNote]) throws
 }
 
-public enum CheatSheetStorageError: Error, LocalizedError {
+public enum CheatSheetStorageError: Error, Equatable, LocalizedError {
     case appGroupUnavailable(String)
     case repositoryUnavailable
     case noteEncodingFailed
+    case noteDecodingFailed
     case widgetSnapshotEncodingFailed
 
     public var errorDescription: String? {
@@ -19,6 +20,8 @@ public enum CheatSheetStorageError: Error, LocalizedError {
             "Note storage is unavailable."
         case .noteEncodingFailed:
             "Could not encode notes for storage."
+        case .noteDecodingFailed:
+            "Stored notes could not be read."
         case .widgetSnapshotEncodingFailed:
             "Could not encode the widget note snapshot."
         }
@@ -52,15 +55,18 @@ public struct UserDefaultsCheatSheetNoteRepository: CheatSheetNoteRepository, @u
     }
 
     public func loadNotes() throws -> [CheatSheetNote] {
+        // No stored payload means a genuine first run, so seed the starter notes.
         guard let data = defaults.data(forKey: notesKey) else {
             return CheatSheetNote.starterNotes
         }
 
         do {
-            let notes = try JSONDecoder().decode([CheatSheetNote].self, from: data)
-            return notes
+            return try JSONDecoder().decode([CheatSheetNote].self, from: data)
         } catch {
-            return CheatSheetNote.starterNotes
+            // Never fall back to starter notes here: callers treat a successful
+            // load as authoritative and would overwrite the stored payload on the
+            // next save, permanently discarding recoverable user data.
+            throw CheatSheetStorageError.noteDecodingFailed
         }
     }
 

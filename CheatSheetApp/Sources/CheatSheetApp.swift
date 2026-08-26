@@ -3,7 +3,12 @@ import SwiftUI
 @main
 struct CheatSheetApp: App {
     @AppStorage("showMenuBarQuickAccess") private var showMenuBarQuickAccess = true
-    @State private var store = NoteStore()
+    @State private var store: NoteStore
+
+    init() {
+        CheatSheetLaunchEnvironment.applyLaunchOverrides()
+        _store = State(wrappedValue: NoteStore(repository: CheatSheetLaunchEnvironment.makeRepository()))
+    }
 
     var body: some Scene {
         #if os(macOS)

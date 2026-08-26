@@ -46,9 +46,10 @@ struct MenuBarQuickAccessView: View {
                 Label("New Note", systemImage: "plus")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .glassCompatibleButtonStyle(prominent: true)
             .controlSize(.large)
             .keyboardShortcut("n")
+            .disabled(store.isPersistenceSuspended)
             .accessibilityHint("Creates a note and opens the CheatSheet window.")
 
             Divider()
@@ -84,7 +85,7 @@ struct MenuBarQuickAccessView: View {
                 Label("Open CheatSheet", systemImage: "macwindow")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
+            .glassCompatibleButtonStyle()
         }
         .padding(14)
         .frame(width: 340)
@@ -152,14 +153,17 @@ struct MenuBarQuickAccessView: View {
                 } label: {
                     Label("Add", systemImage: "plus")
                 }
-                .buttonStyle(.borderedProminent)
+                .glassCompatibleButtonStyle(prominent: true)
                 .keyboardShortcut(.return, modifiers: .command)
-                .disabled(!canSaveQuickCapture)
+                .disabled(!canSaveQuickCapture || store.isPersistenceSuspended)
                 .accessibilityHint("Saves this text as a new note without opening the main window.")
             }
         }
         .padding(10)
-        .background(.regularMaterial, in: .rect(cornerRadius: 12))
+        .liquidGlassPanel(
+            tint: CheatSheetPalette.blue.color,
+            cornerRadius: 12
+        )
     }
 
     private func saveQuickCapture() {

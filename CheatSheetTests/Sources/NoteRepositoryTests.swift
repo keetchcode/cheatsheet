@@ -56,13 +56,27 @@ struct NoteRepositoryTests {
         #expect(try sut.loadNotes().isEmpty)
     }
 
-    @Test func invalidStoredDataFallsBackToStarterNotes() throws {
+    @Test func invalidStoredDataThrowsInsteadOfMaskingCorruption() throws {
         let suite = "CheatSheetTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
 
         let sut = UserDefaultsCheatSheetNoteRepository(defaults: defaults)
         defaults.set(Data("not-json".utf8), forKey: "cheatSheet.notes")
+
+        // Returning starter notes here would look like a successful load, and the
+        // next save would overwrite the still-recoverable stored payload.
+        #expect(throws: CheatSheetStorageError.noteDecodingFailed) {
+            try sut.loadNotes()
+        }
+    }
+
+    @Test func missingStoredDataStillSeedsStarterNotes() throws {
+        let suite = "CheatSheetTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let sut = UserDefaultsCheatSheetNoteRepository(defaults: defaults)
 
         #expect(try sut.loadNotes() == CheatSheetNote.starterNotes)
     }
@@ -164,6 +178,43 @@ struct NoteRepositoryTests {
 
         #expect(metadataRepository.hasInitializedSwiftDataStore)
         #expect(try sut.loadNotes().isEmpty)
+    }
+
+    @Test func factoryRefusesStaleLegacyFallbackAfterSwiftDataInitialization() throws {
+        let suite = "CheatSheetTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let metadataRepository = CheatSheetStoreMetadataRepository(defaults: defaults)
+        metadataRepository.markSwiftDataStoreInitialized()
+        let legacy = SpyLegacyRepository(notes: [
+            CheatSheetNote(title: "Stale Legacy Note", body: "- old")
+        ])
+
+        let repository = CheatSheetNoteRepositoryFactory.fallbackRepository(
+            metadataRepository: metadataRepository,
+            legacyRepository: legacy
+        )
+
+        #expect(repository is UnavailableCheatSheetNoteRepository)
+        #expect(throws: CheatSheetStorageError.repositoryUnavailable) {
+            try repository.loadNotes()
+        }
+    }
+
+    @Test func factoryAllowsLegacyFallbackBeforeSwiftDataInitialization() throws {
+        let suite = "CheatSheetTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let metadataRepository = CheatSheetStoreMetadataRepository(defaults: defaults)
+        let legacyNotes = [CheatSheetNote(title: "Legacy Note", body: "- migrate")]
+        let legacy = SpyLegacyRepository(notes: legacyNotes)
+
+        let repository = CheatSheetNoteRepositoryFactory.fallbackRepository(
+            metadataRepository: metadataRepository,
+            legacyRepository: legacy
+        )
+
+        #expect(try repository.loadNotes() == legacyNotes)
     }
 
     @Test func swiftDataRepositorySavesWidgetSnapshotWithoutMirroringFullLegacyNotes() throws {

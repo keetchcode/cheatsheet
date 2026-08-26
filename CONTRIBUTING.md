@@ -33,9 +33,19 @@ Documents folder.
 
 If you are only changing shared parsing or model code, add or update focused tests in `CheatSheetTests`.
 
+For iOS and iPadOS unit tests:
+
+```sh
+xcodegen generate --spec project.yml
+xcodebuild test -project CheatSheet.xcodeproj -scheme CheatSheetiOS -destination "id=$(Scripts/resolve-ios-simulator.sh)" -derivedDataPath /tmp/CheatSheet-iOS-Test-DD CODE_SIGNING_ALLOWED=NO
+```
+
 ## Widget Signing
 
-The desktop widget needs a shared app group. Forks should use their own Apple Developer Team ID and app group. Update the app group in `project.yml`, both entitlements files, and `Shared/Sources/CheatSheetNote.swift`, then run `xcodegen generate`.
+The widgets need a shared app group. Forks should use their own Apple Developer
+Team ID and app groups. Update `project.yml`, the macOS and iOS entitlement files
+under `CheatSheetApp/` and `CheatSheetWidgets/`, and
+`Shared/Sources/CheatSheetNote.swift`, then run `xcodegen generate`.
 
 ## Code Style
 
@@ -69,7 +79,7 @@ Please include:
 
 Bug reports should include:
 
-- macOS version.
+- Platform and OS version (macOS, iOS, or iPadOS).
 - Xcode version if the issue is build related.
 - Steps to reproduce.
 - What you expected to happen.

@@ -27,7 +27,7 @@ enum AppTheme {
         }
     }
 
-    static func glassFallbackFill(for colorScheme: ColorScheme, tint: Color) -> some ShapeStyle {
+    static func glassFallbackFill(for colorScheme: ColorScheme) -> some ShapeStyle {
         switch colorScheme {
         case .dark:
             AnyShapeStyle(.regularMaterial)

@@ -193,6 +193,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.wesleycheatsheet.ios.ui-tests
+        TARGETED_DEVICE_FAMILY: "1,2"
 schemes:
   CheatSheet:
     build:

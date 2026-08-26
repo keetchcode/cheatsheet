@@ -15,21 +15,15 @@ struct ContentView: View {
 
     var body: some View {
         rootContent
-            .tint(.blue)
-            .toolbar {
-                ContentToolbar(
-                    isShowingTrash: isShowingTrash,
-                    selectedNoteIsArchived: store.selectedNote?.isArchived ?? true,
-                    createAction: createNote,
-                    archiveAction: {
-                        store.archiveSelectedNote()
-                        compactPath.removeAll()
-                    },
-                    toggleTrashAction: {
-                        isShowingTrash ? showNotes() : showTrash()
-                    }
+            .disabled(store.isPersistenceSuspended)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                PersistenceStatusBanner(
+                    status: store.persistenceStatus,
+                    canRetryLoad: store.isPersistenceSuspended,
+                    retryAction: store.retryLoad
                 )
             }
+            .tint(.blue)
             .onChange(of: scenePhase) { _, newPhase in
                 guard newPhase != .active else { return }
                 Task {
@@ -57,25 +51,60 @@ struct ContentView: View {
         #endif
     }
 
+    /// Attached inside each navigation container rather than to `rootContent`.
+    /// A `.toolbar` applied to a `NavigationStack` itself never installs bar
+    /// items, which left the compact iPhone layout with no visible actions.
+    @ToolbarContentBuilder
+    private var contentToolbar: some ToolbarContent {
+        ContentToolbar(
+            isShowingTrash: isShowingTrash,
+            selectedNoteIsArchived: store.selectedNote?.isArchived ?? true,
+            createAction: createNote,
+            archiveAction: {
+                store.archiveSelectedNote()
+                compactPath.removeAll()
+            },
+            toggleTrashAction: {
+                isShowingTrash ? showNotes() : showTrash()
+            }
+        )
+    }
+
     private var splitRoot: some View {
         NavigationSplitView {
             SidebarView(store: store, isShowingTrash: isShowingTrash)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 320)
         } detail: {
-            if isShowingTrash {
-                trashDetail
-            } else if let selectedNoteID = store.selectedNoteID,
-                      let note = store.binding(for: selectedNoteID) {
-                editorDetail(note: note, selectedNoteID: selectedNoteID)
-            } else {
-                EmptyStateView {
-                    showNotes(createNoteIfNeeded: false)
-                    store.addNote()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
+            // On iPad the detail column owns the navigation bar, so the toolbar
+            // has to attach here or `.topBarTrailing` items never appear. macOS
+            // keeps the toolbar on the split view, where it already renders into
+            // the unified window toolbar.
+            #if os(iOS)
+            splitDetail.toolbar { contentToolbar }
+            #else
+            splitDetail
+            #endif
         }
         .navigationSplitViewStyle(.balanced)
+        #if os(macOS)
+        .toolbar { contentToolbar }
+        #endif
+    }
+
+    @ViewBuilder
+    private var splitDetail: some View {
+        if isShowingTrash {
+            trashDetail
+        } else if let selectedNoteID = store.selectedNoteID,
+                  let note = store.binding(for: selectedNoteID) {
+            editorDetail(note: note, selectedNoteID: selectedNoteID)
+        } else {
+            EmptyStateView {
+                showNotes(createNoteIfNeeded: false)
+                store.addNote()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
     }
 
     #if os(iOS)
@@ -89,6 +118,7 @@ struct ContentView: View {
             .navigationDestination(for: CheatSheetNote.ID.self) { noteID in
                 compactDestination(for: noteID)
             }
+            .toolbar { contentToolbar }
         }
     }
     #endif
@@ -205,6 +235,7 @@ private struct ContentToolbar: ToolbarContent {
                 Label("New Note", systemImage: "square.and.pencil")
             }
             .accessibilityLabel("New Note")
+            .accessibilityIdentifier("new-note-button")
         }
 
         ToolbarItemGroup(placement: .secondaryAction) {
@@ -213,6 +244,7 @@ private struct ContentToolbar: ToolbarContent {
             } label: {
                 Label(isShowingTrash ? "Show Notes" : "Show Trash", systemImage: isShowingTrash ? "note.text" : "archivebox")
             }
+            .accessibilityIdentifier("toggle-trash-button")
 
             Button(role: .destructive) {
                 archiveAction()
@@ -220,6 +252,7 @@ private struct ContentToolbar: ToolbarContent {
                 Label("Move to Trash", systemImage: "trash")
             }
             .disabled(selectedNoteIsArchived)
+            .accessibilityIdentifier("move-to-trash-button")
         }
         #else
         ToolbarItemGroup(placement: .primaryAction) {
@@ -343,6 +376,7 @@ private struct CompactNoteListView: View {
                     }
                 }
                 .listStyle(.insetGrouped)
+                .accessibilityIdentifier("note-list")
             }
         }
         .navigationTitle(isShowingTrash ? "Trash" : "CheatSheet")

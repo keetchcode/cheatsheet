@@ -54,6 +54,13 @@ final class NoteStore {
     private var lastReloadedWidgetNote: CheatSheetNote?
     @ObservationIgnored
     private var saveTask: Task<Void, Never>?
+    /// Set when the initial load failed. Saving a snapshot the store never
+    /// managed to read would overwrite the durable store with partial data, so
+    /// persistence stays suspended until a reload succeeds.
+    @ObservationIgnored
+    private(set) var isPersistenceSuspended = false
+    @ObservationIgnored
+    private var saveGeneration = 0
 
     init(
         repository: any CheatSheetNoteRepository = CheatSheetNoteRepositoryFactory.live(),
@@ -72,7 +79,10 @@ final class NoteStore {
             loadError = nil
             persistenceStatus = .ready
         } catch {
-            storedNotes = CheatSheetNote.starterNotes
+            // Start empty rather than with starter notes: starter content is
+            // indistinguishable from real data to the user, and persisting it
+            // would destroy whatever the store still holds.
+            storedNotes = []
             loadError = error
         }
 
@@ -207,33 +217,47 @@ final class NoteStore {
         persistImmediately()
     }
 
-    func flushPendingChanges() {
-        let snapshot = snapshotForPersistence()
-        saveTask?.cancel()
-        startSaveTask(for: snapshot)
-    }
-
     func flushPendingChanges() async {
+        guard !isPersistenceSuspended else { return }
         let snapshot = snapshotForPersistence()
         saveTask?.cancel()
         saveTask = nil
         await persist(snapshot)
     }
 
+    /// Re-reads the durable store after a failed load. On success the in-memory
+    /// notes are replaced and persistence resumes.
+    func retryLoad() {
+        do {
+            let storedNotes = try repository.loadNotes()
+            notes = Self.removingExpiredArchivedNotes(from: storedNotes, now: now())
+            selectedNoteID = activeNotes.first(where: \.isPinned)?.id
+                ?? activeNotes.first?.id
+                ?? archivedNotes.first?.id
+            lastReloadedWidgetNote = Self.widgetNote(in: notes)
+            isPersistenceSuspended = false
+            persistenceStatus = .ready
+        } catch {
+            handleLoadFailure(error)
+        }
+    }
+
     private func schedulePersist() {
+        guard !isPersistenceSuspended else { return }
         let snapshot = snapshotForPersistence()
         saveTask?.cancel()
         startSaveTask(for: snapshot, delay: .milliseconds(400))
     }
 
     private func persistImmediately() {
+        guard !isPersistenceSuspended else { return }
         let snapshot = snapshotForPersistence()
         saveTask?.cancel()
         startSaveTask(for: snapshot)
     }
 
     private func startSaveTask(for snapshot: [CheatSheetNote], delay: Duration? = nil) {
-        persistenceStatus = .saving
+        let generation = beginSave()
         saveTask = Task { [weak self, persistenceWorker] in
             do {
                 if let delay {
@@ -241,25 +265,34 @@ final class NoteStore {
                 }
 
                 try await persistenceWorker.save(snapshot)
-                self?.handleSaveSuccess(for: snapshot)
+                self?.handleSaveSuccess(for: snapshot, generation: generation)
             } catch is CancellationError {
                 return
             } catch {
-                self?.handleSaveFailure(error)
+                self?.handleSaveFailure(error, generation: generation)
                 return
             }
         }
     }
 
     private func persist(_ snapshot: [CheatSheetNote]) async {
-        persistenceStatus = .saving
+        let generation = beginSave()
 
         do {
             try await persistenceWorker.save(snapshot)
-            handleSaveSuccess(for: snapshot)
+            handleSaveSuccess(for: snapshot, generation: generation)
         } catch {
-            handleSaveFailure(error)
+            handleSaveFailure(error, generation: generation)
         }
+    }
+
+    /// Marks a new save as the current one. A cancelled task may still finish its
+    /// in-flight repository work, so completions carry the generation they were
+    /// started with and stale ones are ignored.
+    private func beginSave() -> Int {
+        saveGeneration += 1
+        persistenceStatus = .saving
+        return saveGeneration
     }
 
     private func snapshotForPersistence() -> [CheatSheetNote] {
@@ -271,19 +304,22 @@ final class NoteStore {
     private func handleLoadFailure(_ error: Error) {
         let message = Self.storageMessage(for: error)
         persistenceStatus = .loadFailed(message)
+        isPersistenceSuspended = true
         noteStoreLogger.error("Failed to load notes: \(message, privacy: .public)")
     }
 
-    private func handleSaveSuccess(for snapshot: [CheatSheetNote]) {
-        persistenceStatus = .saved(now())
+    private func handleSaveSuccess(for snapshot: [CheatSheetNote], generation: Int) {
         reloadWidgetTimelinesIfNeeded(for: snapshot)
+        guard generation == saveGeneration else { return }
+        persistenceStatus = .saved(now())
         saveTask = nil
     }
 
-    private func handleSaveFailure(_ error: Error) {
+    private func handleSaveFailure(_ error: Error, generation: Int) {
         let message = Self.storageMessage(for: error)
-        persistenceStatus = .saveFailed(message)
         noteStoreLogger.error("Failed to save notes: \(message, privacy: .public)")
+        guard generation == saveGeneration else { return }
+        persistenceStatus = .saveFailed(message)
         saveTask = nil
     }
 
@@ -349,7 +385,7 @@ final class NoteStore {
     }
 }
 
-private actor NotePersistenceWorker {
+    private actor NotePersistenceWorker {
     private let repository: any CheatSheetNoteRepository
 
     init(repository: any CheatSheetNoteRepository) {
@@ -357,6 +393,7 @@ private actor NotePersistenceWorker {
     }
 
     func save(_ notes: [CheatSheetNote]) throws {
+        try Task.checkCancellation()
         try repository.saveNotes(notes)
     }
 }

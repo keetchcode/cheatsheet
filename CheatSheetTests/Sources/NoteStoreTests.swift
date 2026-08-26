@@ -326,6 +326,27 @@ struct NoteStoreTests {
         #expect(reloadCount == 0)
     }
 
+    @Test func rapidEditsPersistOnlyTheLatestSnapshot() async throws {
+        let noteID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000403"))
+        let repository = SpyNoteRepository(
+            loadedNotes: [Self.sampleNote(id: noteID, title: "Original")]
+        )
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {})
+        let binding = try #require(sut.binding(for: noteID))
+
+        var firstEdit = binding.wrappedValue
+        firstEdit.title = "First Edit"
+        binding.wrappedValue = firstEdit
+
+        var latestEdit = binding.wrappedValue
+        latestEdit.title = "Latest Edit"
+        binding.wrappedValue = latestEdit
+        await sut.flushPendingChanges()
+
+        #expect(repository.savedNotes.last?.first?.title == "Latest Edit")
+        #expect(repository.savedNotes.contains { $0.first?.title == "First Edit" } == false)
+    }
+
     @Test func saveFailureUpdatesPersistenceStatusWithoutReloadingWidget() async {
         let repository = SpyNoteRepository(
             loadedNotes: [Self.sampleNote(title: "Existing")],
@@ -363,6 +384,55 @@ struct NoteStoreTests {
         #expect(sut.activeNotes.count == 500)
     }
 
+    @Test func failedLoadStartsEmptyAndSuspendsPersistence() {
+        let repository = SpyNoteRepository(
+            loadedNotes: [Self.sampleNote(title: "Real")],
+            loadError: CheatSheetStorageError.noteDecodingFailed
+        )
+
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {})
+
+        // Starter notes would be indistinguishable from real data to the user.
+        #expect(sut.notes.isEmpty)
+        #expect(sut.persistenceStatus.isFailure)
+        #expect(sut.isPersistenceSuspended)
+    }
+
+    @Test func failedLoadDoesNotOverwriteStoredNotesOnEdit() async {
+        let repository = SpyNoteRepository(
+            loadedNotes: [Self.sampleNote(title: "Real")],
+            loadError: CheatSheetStorageError.noteDecodingFailed
+        )
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {})
+
+        sut.addNote()
+        await sut.flushPendingChanges()
+
+        // A save here would delete every stored note the load could not read.
+        #expect(repository.savedNotes.isEmpty)
+    }
+
+    @Test func retryLoadRecoversNotesAndResumesPersistence() async throws {
+        let noteID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000901"))
+        let repository = SpyNoteRepository(
+            loadedNotes: [Self.sampleNote(id: noteID, title: "Recovered")],
+            loadError: CheatSheetStorageError.noteDecodingFailed
+        )
+        let sut = NoteStore(repository: repository, reloadWidgetTimelines: {})
+        #expect(sut.isPersistenceSuspended)
+
+        repository.loadError = nil
+        sut.retryLoad()
+
+        #expect(sut.notes.map(\.id) == [noteID])
+        #expect(sut.isPersistenceSuspended == false)
+        #expect(sut.persistenceStatus.isFailure == false)
+
+        sut.addNote()
+        await sut.flushPendingChanges()
+        #expect(repository.savedNotes.isEmpty == false)
+    }
+
     private static func sampleNote(
         id: UUID = UUID(),
         title: String,
@@ -381,34 +451,60 @@ struct NoteStoreTests {
 }
 
 private final class SpyNoteRepository: CheatSheetNoteRepository, @unchecked Sendable {
-    let loadedNotes: [CheatSheetNote]
-    let loadError: (any Error)?
-    let saveError: (any Error)?
-    private(set) var savedNotes: [[CheatSheetNote]] = []
+    private struct State {
+        var loadedNotes: [CheatSheetNote]
+        var loadError: (any Error)?
+        var saveError: (any Error)?
+        var savedNotes: [[CheatSheetNote]] = []
+    }
+
+    private let lock = NSLock()
+    private var state: State
+
+    var loadedNotes: [CheatSheetNote] {
+        get { lock.withLock { state.loadedNotes } }
+        set { lock.withLock { state.loadedNotes = newValue } }
+    }
+
+    var loadError: (any Error)? {
+        get { lock.withLock { state.loadError } }
+        set { lock.withLock { state.loadError = newValue } }
+    }
+
+    var saveError: (any Error)? {
+        get { lock.withLock { state.saveError } }
+        set { lock.withLock { state.saveError = newValue } }
+    }
+
+    var savedNotes: [[CheatSheetNote]] {
+        lock.withLock { state.savedNotes }
+    }
 
     init(
         loadedNotes: [CheatSheetNote],
         loadError: (any Error)? = nil,
         saveError: (any Error)? = nil
     ) {
-        self.loadedNotes = loadedNotes
-        self.loadError = loadError
-        self.saveError = saveError
+        state = State(loadedNotes: loadedNotes, loadError: loadError, saveError: saveError)
     }
 
     func loadNotes() throws -> [CheatSheetNote] {
-        if let loadError {
-            throw loadError
-        }
+        try lock.withLock {
+            if let loadError = state.loadError {
+                throw loadError
+            }
 
-        return loadedNotes
+            return state.loadedNotes
+        }
     }
 
     func saveNotes(_ notes: [CheatSheetNote]) throws {
-        if let saveError {
-            throw saveError
-        }
+        try lock.withLock {
+            if let saveError = state.saveError {
+                throw saveError
+            }
 
-        savedNotes.append(notes)
+            state.savedNotes.append(notes)
+        }
     }
 }

@@ -3,20 +3,33 @@ import SwiftData
 
 public enum CheatSheetNoteRepositoryFactory {
     public static func live() -> any CheatSheetNoteRepository {
+        let metadataRepository = try? CheatSheetStoreMetadataRepository.appGroup()
+
         do {
             return SwiftDataCheatSheetNoteRepository(
                 container: try SwiftDataCheatSheetNoteRepository.makeDefaultContainer(),
                 legacyRepository: try? UserDefaultsCheatSheetNoteRepository.appGroup(),
                 widgetSnapshotRepository: try? WidgetNoteSnapshotRepository.appGroup(),
-                metadataRepository: try? CheatSheetStoreMetadataRepository.appGroup()
+                metadataRepository: metadataRepository
             )
         } catch {
-            do {
-                return try UserDefaultsCheatSheetNoteRepository.appGroup()
-            } catch {
-                return UnavailableCheatSheetNoteRepository()
-            }
+            return fallbackRepository(
+                metadataRepository: metadataRepository,
+                legacyRepository: try? UserDefaultsCheatSheetNoteRepository.appGroup()
+            )
         }
+    }
+
+    static func fallbackRepository(
+        metadataRepository: CheatSheetStoreMetadataRepository?,
+        legacyRepository: (any CheatSheetNoteRepository)?
+    ) -> any CheatSheetNoteRepository {
+        guard metadataRepository?.hasInitializedSwiftDataStore != true,
+              let legacyRepository else {
+            return UnavailableCheatSheetNoteRepository()
+        }
+
+        return legacyRepository
     }
 }
 
