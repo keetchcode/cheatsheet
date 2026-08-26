@@ -10,6 +10,7 @@ public enum CheatSheetStorageError: Error, Equatable, LocalizedError {
     case repositoryUnavailable
     case noteEncodingFailed
     case noteDecodingFailed
+    case widgetSnapshotDecodingFailed
     case widgetSnapshotEncodingFailed
 
     public var errorDescription: String? {
@@ -22,6 +23,8 @@ public enum CheatSheetStorageError: Error, Equatable, LocalizedError {
             "Could not encode notes for storage."
         case .noteDecodingFailed:
             "Stored notes could not be read."
+        case .widgetSnapshotDecodingFailed:
+            "The widget note snapshot could not be read."
         case .widgetSnapshotEncodingFailed:
             "Could not encode the widget note snapshot."
         }
@@ -110,9 +113,13 @@ public struct WidgetNoteSnapshotRepository: @unchecked Sendable {
         try WidgetNoteSnapshotRepository(defaults: CheatSheetAppGroup.defaults(), noteKey: noteKey)
     }
 
-    public func loadNote() -> CheatSheetNote? {
+    public func loadNote() throws -> CheatSheetNote? {
         guard let data = defaults.data(forKey: noteKey) else { return nil }
-        return try? JSONDecoder().decode(CheatSheetNote.self, from: data)
+        do {
+            return try JSONDecoder().decode(CheatSheetNote.self, from: data)
+        } catch {
+            throw CheatSheetStorageError.widgetSnapshotDecodingFailed
+        }
     }
 
     public func saveNote(_ note: CheatSheetNote?) throws {

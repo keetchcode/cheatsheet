@@ -1,8 +1,8 @@
 # CheatSheet Code Audit
 
-Generated 2026-08-25 from commit `c3cbd31` and updated after the remediation pass. Scope: 50 Swift files across macOS, iOS/iPadOS, WidgetKit, unit tests, UI tests, CI, and screenshot tooling. The focused recent-change range is `9af40e7^..c3cbd31` (five direct-to-`main` commits). GitHub contains no pull requests for this repository, so there were no PR discussions, approvals, or merge checks to reconcile.
+Generated 2026-08-25 and refreshed 2026-08-26 for the build 12 release candidate. Scope: 50 Swift files across macOS, iOS/iPadOS, WidgetKit, unit tests, UI tests, CI, and screenshot tooling. The review covers the current tree plus recent direct-to-`main` commits through `1526af5`. GitHub contained no pull requests to reconcile at the time of review.
 
-The app has a strong product premise and a disciplined dependency-free implementation. The confirmed data-authority defect, stale widget side effect, shared-window navigation ambiguity, broad content glass, editor cache churn, public error details, and small structural issues identified below were remediated. Local cross-platform tests and published CI are green. **Senior review decision: source changes approved.** Signed distribution, physical-device accessibility, and live widget behavior remain release-process checks rather than source-review failures.
+The app has a strong product premise and a disciplined dependency-free implementation. The confirmed data-authority defect, stale widget side effect, shared-window navigation ambiguity, compact toolbar regression, corrupt widget-snapshot handling, broad content glass, editor cache churn, public error details, and small structural issues identified below were remediated. Local cross-platform tests are green. **Senior review decision: source changes approved.** Signed distribution, physical-device accessibility, and live widget behavior remain release-process checks rather than source-review failures.
 
 ## 1. Executive summary
 
@@ -14,6 +14,8 @@ The app has a strong product premise and a disciplined dependency-free implement
 6. **[Resolved] Custom Liquid Glass was overused as content chrome** — §8.1.
 7. **[Resolved] Size-class replacement could discard visible context** — §5.3.
 8. **[Low] Repository concurrency relies on unchecked promises** — §3.3 — `Shared/Sources/CheatSheetNoteRepository.swift:41-49`.
+9. **[Resolved] Compact editor actions disappeared after Trash restore** — §5.4.
+10. **[Resolved] Corrupt widget snapshots were silently treated as empty** — §5.5.
 
 No critical security issue, compiler warning, deprecated API, network exposure, third-party dependency risk, continuous animation, shader, or unbounded background task was found.
 
@@ -84,6 +86,18 @@ _No findings._ Fresh iOS and macOS clean builds emitted no app-source warnings. 
 - **What:** Compact and regular layouts swap complete `NavigationStack` and `NavigationSplitView` roots while retaining separate selection/path state.
 - **Why:** iPad rotation or multitasking width changes can reset the visible route or reappear with stale compact navigation state.
 - **Resolution:** Size-class changes now reconcile the compact path with the selected note.
+
+### 5.4 Resolved: compact editor actions disappeared after Trash restore
+- **Location:** `CheatSheetApp/Sources/ContentView.swift`
+- **What:** Compact destinations did not attach the editor toolbar consistently after restoring a note and reopening it from the list.
+- **Why:** Archive, Trash, and other note actions could disappear during a normal recovery workflow.
+- **Resolution:** Every compact destination branch now attaches the same content toolbar. A full create, archive, restore, reopen, and permanent-delete UI test protects the flow.
+
+### 5.5 Resolved: corrupt widget snapshots were silently treated as empty
+- **Location:** `Shared/Sources/CheatSheetNoteRepository.swift`; `CheatSheetWidgets/Sources/CheatSheetProvider.swift`
+- **What:** Snapshot decoding failure returned no note, making storage corruption indistinguishable from a valid empty state.
+- **Why:** Silent failure made production diagnosis needlessly difficult.
+- **Resolution:** The repository now reports a typed decoding error; the widget logs the underlying diagnostic privately and still renders its safe empty state.
 
 ## 6. Security
 
@@ -174,9 +188,9 @@ No clearly unreachable production type, abandoned feature path, commented-out im
 
 - **§5.1 remediation** — initialized metadata is checked before legacy storage; two focused regression tests prove that an intentional empty state remains empty with retained legacy notes and production starter-note behavior.
 - GitHub review found **zero pull requests** in the repository; the five reviewed commits were direct pushes to `main`.
-- Fresh clean iOS Simulator and macOS arm64 builds succeeded with zero app-source warning/error lines under Xcode 27 beta.
-- Published GitHub CI for commit `c3cbd31` passed macOS tests, iOS unit tests, configuration verification, and four iOS UI smoke tests using Xcode 26.
-- Fresh local verification passed **54 tests across five suites** on iOS, macOS arm64, and macOS x86_64. A fresh universal macOS Release build contains both architectures.
+- Fresh clean iOS Simulator and macOS builds succeeded with zero app-source warning/error lines under Xcode 27 beta.
+- Published GitHub CI for commit `1526af5` passed macOS tests, iOS unit tests, configuration verification, and four iOS UI smoke tests using Xcode 26.
+- The build 12 release candidate passed **55 tests across five suites** on iOS and seven deterministic end-to-end UI flows. macOS arm64/x86_64 and the universal Release app were rerun after the final changes.
 - Twelve final screenshots were freshly captured at the standard content size in light and dark appearances, then passed exact device dimensions, PNG/RGB/no-alpha, size, ordering, and caption validation.
 - Current native-resolution iPhone/iPad dark and light captures were visually inspected for hierarchy, layout, truncation, controls, and platform adaptation.
 - `git diff --check` passed after the remediation and report updates; the working tree began clean at `c3cbd31`.

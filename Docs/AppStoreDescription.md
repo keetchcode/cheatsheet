@@ -6,7 +6,15 @@ Liquid Glass: CheatSheet
 
 ## Subtitle (30 chars max)
 
-Note Widget
+Code Notes & Widgets
+
+## Promotional Text (170 chars max)
+
+Keep commands, snippets, and release checklists one tap away. Free, private, offline, and open source on Mac, iPhone, and iPad.
+
+## Keywords (100 chars max)
+
+commands,snippets,checklist,git,docker,terminal,reference,offline,programming,shortcuts,plain-text
 
 ## Description
 
@@ -21,7 +29,7 @@ Every developer has commands they look up daily. Instead of digging through brow
 ### Features
 
 - **WidgetKit widgets** — Pin any note to a desktop or Home Screen widget. Parses checkboxes and headings automatically. Refreshes every 30 min or instantly when you pin a new note.
-- **Smart checklist parsing** — Lines starting with `- [x]` or `- [ ]` become checkable tasks. `#` lines become headings. Everything else is plain text.
+- **Smart checklist display** — Lines starting with `- [x]` or `- [ ]` render as completed or open tasks in the widget. `#` lines become headings. Everything remains editable plain text in the app.
 - **Quick capture & auto-save** — Create notes with a title and body. Edits save automatically after 400ms — no button to press.
 - **Full-text search** — Search across all note titles and bodies in both active notes and trash.
 - **10 colors + 4 fonts** — Blue, Cyan, Violet, Mint, Lime, Amber, Coral, Rose, Indigo, Graphite. Mono, System, Rounded, Serif. Colors sync to the widget.
@@ -43,3 +51,17 @@ No analytics, no accounts, no network services, no sync. All data stays on devic
 ### License
 
 MIT — free to use, modify, and share.
+
+## What's New in 1.1
+
+CheatSheet now runs on iPhone and iPad with Home Screen widgets, adaptive navigation, refined Liquid Glass controls, faster note editing, safer local persistence, improved accessibility, and refreshed onboarding. It remains completely free, private, offline, and open source.
+
+## URLs
+
+- Support: <https://github.com/keetchcode/cheatsheet/issues>
+- Privacy policy: <https://github.com/keetchcode/cheatsheet/blob/main/PRIVACY.md>
+- Marketing/source: <https://github.com/keetchcode/cheatsheet>
+
+## App Review Notes
+
+CheatSheet requires no account and has no network-dependent features. To test the widget, launch the app, open a note, choose **Use in Widget**, then add CheatSheet from the Home Screen or desktop widget gallery. Notes and widget snapshots remain in the app's local App Group container.

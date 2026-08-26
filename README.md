@@ -87,10 +87,10 @@ UDID. Prefer it over a device name: a bare `name=iPhone 16` destination resolves
 to `OS:latest`, which fails once the installed runtime is newer than that device
 (iOS 26 ships the iPhone 17 family, not the iPhone 16).
 
-To check the iPad layout, pass an iPad destination explicitly:
+To check the iPad layout, resolve the newest installed iPad simulator:
 
 ```sh
-xcodebuild build -project CheatSheet.xcodeproj -scheme CheatSheetiOS -destination 'platform=iOS Simulator,name=iPad Pro 11-inch (M4),OS=18.5' -derivedDataPath /tmp/CheatSheet-iPad-DD CODE_SIGNING_ALLOWED=NO
+xcodebuild build -project CheatSheet.xcodeproj -scheme CheatSheetiOS -destination "id=$(Scripts/resolve-ios-simulator.sh ipad)" -derivedDataPath /tmp/CheatSheet-iPad-DD CODE_SIGNING_ALLOWED=NO
 ```
 
 ## Running The Widget
@@ -122,6 +122,7 @@ After running the app once, add the CheatSheet widget from the macOS widget gall
 ## Privacy
 
 CheatSheet stores notes locally on device. The app does not include analytics, accounts, sync, or network services.
+See the public [Privacy Policy](PRIVACY.md) for the complete disclosure.
 
 ## Product Principles
 

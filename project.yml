@@ -12,7 +12,7 @@ settings:
     GENERATE_INFOPLIST_FILE: YES
     ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     MARKETING_VERSION: "1.1"
-    CURRENT_PROJECT_VERSION: "11"
+    CURRENT_PROJECT_VERSION: "12"
     VERSIONING_SYSTEM: apple-generic
 targets:
   CheatSheet:
@@ -26,6 +26,7 @@ targets:
         CFBundleIconName: AppIcon
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        ITSAppUsesNonExemptEncryption: false
         LSApplicationCategoryType: public.app-category.productivity
         NSHumanReadableCopyright: "Copyright 2026 Wesley Keetch. All rights reserved."
     sources:
@@ -136,6 +137,7 @@ targets:
         CFBundleDisplayName: CheatSheet
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        ITSAppUsesNonExemptEncryption: false
         LSApplicationCategoryType: public.app-category.productivity
         NSHumanReadableCopyright: "Copyright 2026 Wesley Keetch. All rights reserved."
         UIApplicationSupportsIndirectInputEvents: true

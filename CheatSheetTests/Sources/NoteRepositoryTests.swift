@@ -99,10 +99,23 @@ struct NoteRepositoryTests {
         let note = CheatSheetNote(title: "Pinned", body: "- show in widget", isPinned: true)
 
         try sut.saveNote(note)
-        #expect(sut.loadNote()?.title == "Pinned")
+        #expect(try sut.loadNote()?.title == "Pinned")
 
         try sut.saveNote(nil)
-        #expect(sut.loadNote() == nil)
+        #expect(try sut.loadNote() == nil)
+    }
+
+    @Test func widgetSnapshotReportsCorruptedPayload() throws {
+        let suite = "CheatSheetTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let noteKey = "test.widget.snapshot"
+        let sut = WidgetNoteSnapshotRepository(defaults: defaults, noteKey: noteKey)
+        defaults.set(Data("not-json".utf8), forKey: noteKey)
+
+        #expect(throws: CheatSheetStorageError.widgetSnapshotDecodingFailed) {
+            try sut.loadNote()
+        }
     }
 
     @Test func swiftDataRepositorySavesAndLoadsNotesInOrder() throws {
@@ -279,7 +292,7 @@ struct NoteRepositoryTests {
 
         try sut.saveNotes(notes)
 
-        #expect(widgetSnapshotRepository.loadNote() == notes[0])
+        #expect(try widgetSnapshotRepository.loadNote() == notes[0])
         #expect(legacy.savedNotes.isEmpty)
     }
 
@@ -353,7 +366,7 @@ struct NoteRepositoryTests {
         try sut.saveNotes(duplicateNotes)
 
         #expect(try sut.loadNotes() == expectedNotes)
-        #expect(widgetSnapshotRepository.loadNote() == expectedNotes[0])
+        #expect(try widgetSnapshotRepository.loadNote() == expectedNotes[0])
         #expect(legacy.savedNotes.isEmpty)
     }
 

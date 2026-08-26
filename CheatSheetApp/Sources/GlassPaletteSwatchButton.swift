@@ -24,6 +24,7 @@ struct GlassPaletteSwatchButton: View {
         .frame(width: hitTargetSize, height: hitTargetSize)
         .contentShape(Rectangle())
         .accessibilityLabel("\(swatch.displayName) note color")
+        .accessibilityIdentifier("palette-\(swatch.rawValue.lowercased())")
         .accessibilityValue(isSelected ? "Selected" : "Not selected")
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
         .help("Set \(swatch.displayName.lowercased()) note color")

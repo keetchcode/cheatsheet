@@ -25,5 +25,6 @@ struct FontStylePicker: View {
         .help("Choose note font")
         .accessibilityLabel("Note font")
         .accessibilityValue(selection.displayName)
+        .accessibilityIdentifier("font-style-picker")
     }
 }

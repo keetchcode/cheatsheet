@@ -10,6 +10,7 @@ struct EditorHeader: View {
                 .font(.title)
                 .textFieldStyle(.plain)
                 .foregroundStyle(.primary)
+                .accessibilityIdentifier("note-title-field")
 
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 12) {
@@ -48,6 +49,7 @@ struct EditorHeader: View {
             .glassCompatibleButtonStyle(prominent: note.isPinned)
             .help(note.isPinned ? "This note appears in the widget" : "Show this note in the widget")
             .accessibilityLabel(note.isPinned ? "Pinned to Widget" : "Use in Widget")
+            .accessibilityIdentifier("widget-pin-button")
         }
     }
 }

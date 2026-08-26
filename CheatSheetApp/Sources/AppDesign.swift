@@ -13,9 +13,6 @@ enum AppDesign {
     static let windowMinimumWidth: CGFloat = 640
     static let windowMinimumHeight: CGFloat = 480
     static let editorMinimumWidth: CGFloat = 320
-    static let inspectorMinimumWidth: CGFloat = 260
-    static let inspectorIdealWidth: CGFloat = 320
-
     static var contentPadding: CGFloat {
         #if os(iOS)
         compactContentPadding

@@ -66,6 +66,7 @@ struct TrashNoteView: View {
     private var restoreButton: some View {
         Button("Restore Note", systemImage: "arrow.uturn.backward", action: restoreAction)
             .glassCompatibleButtonStyle(prominent: true)
+            .accessibilityIdentifier("restore-note-button")
     }
 
     private var deleteNowButton: some View {
@@ -73,5 +74,6 @@ struct TrashNoteView: View {
             isConfirmingPermanentDelete = true
         }
         .glassCompatibleButtonStyle()
+        .accessibilityIdentifier("delete-note-button")
     }
 }

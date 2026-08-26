@@ -172,6 +172,7 @@ struct ContentView: View {
             .padding(AppDesign.compactContentPadding)
             .navigationTitle(note.displayTitle)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar { contentToolbar }
             .onAppear {
                 store.selectedNoteID = noteID
             }
@@ -179,6 +180,7 @@ struct ContentView: View {
             editorDetail(note: note, selectedNoteID: noteID)
                 .navigationTitle("")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbar { contentToolbar }
                 .onAppear {
                     store.selectedNoteID = noteID
                 }
@@ -187,6 +189,7 @@ struct ContentView: View {
                 createNote()
             }
             .navigationTitle("CheatSheet")
+            .toolbar { contentToolbar }
         }
     }
     #endif

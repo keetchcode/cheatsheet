@@ -24,3 +24,7 @@ CheatSheet *.xcodeproj/
 # Swift Package Manager
 .build/
 .swiftpm/
+
+# Python tooling cache
+__pycache__/
+*.py[cod]

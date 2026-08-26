@@ -9,6 +9,7 @@ struct EditorTextPanel: View {
             EditorHeader(note: $note, pinAction: pinAction)
 
             TextEditor(text: $note.body)
+                .accessibilityIdentifier("note-body-editor")
                 .font(.system(.body, design: note.fontStyle.design))
                 .lineSpacing(5)
                 .scrollContentBackground(.hidden)
