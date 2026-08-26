@@ -7,7 +7,7 @@ struct EmptyStateView: View {
         ContentUnavailableView {
             Label("No Note Selected", systemImage: "note.text.badge.plus")
         } description: {
-            Text("100% free and open source. Create a small checklist or cheat sheet to keep nearby.")
+            Text("Create a small checklist or cheat sheet to keep nearby.")
         } actions: {
             Button("Create Note", systemImage: "plus", action: addAction)
                 .glassCompatibleButtonStyle(prominent: true)

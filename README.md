@@ -2,20 +2,51 @@
 
 CheatSheet is a small, open-source macOS, iOS, and iPadOS app for keeping short coding notes, checklists, and command reminders close by. A WidgetKit extension keeps one pinned note visible while you work.
 
-## Screenshots
+## Platforms
 
-![CheatSheet desktop with widget and pinned note](Docs/Images/cheatsheet-desktop-overview.png)
+<table>
+  <tr>
+    <th>macOS</th>
+    <th>iPhone</th>
+    <th>iPad</th>
+  </tr>
+  <tr>
+    <td><img src="Docs/Images/cheatsheet-desktop-overview.png" alt="CheatSheet on macOS" /></td>
+    <td><img src="Docs/Images/cheatsheet-iphone.png" alt="CheatSheet on iPhone" /></td>
+    <td><img src="Docs/Images/cheatsheet-ipad.png" alt="CheatSheet on iPad" /></td>
+  </tr>
+</table>
 
-![CheatSheet widget in the macOS widget gallery showing the small, medium, and large sizes](Docs/Images/cheatsheet-widget-gallery.png)
+## Widgets
 
-The app is intentionally simple:
+CheatSheet includes WidgetKit extensions for macOS, iOS, and iPadOS. Widgets follow the pinned note's color and font and support the system small, medium, and large families.
 
-- Create and edit small cheat-sheet notes.
-- Pin one note for the WidgetKit widget on supported platforms.
-- Pick a note color and font style.
-- Move notes to Trash, restore them, or let them delete automatically after 30 days.
-- Store notes locally using SwiftData and app-group persistence.
-- Use native Liquid Glass styling on macOS and iOS/iPadOS 26, with material fallbacks on earlier supported releases.
+<table>
+  <tr>
+    <th>iPhone Home Screen</th>
+    <th>macOS Widget Gallery</th>
+  </tr>
+  <tr>
+    <td><img src="Docs/Images/cheatsheet-iphone-widget.png" alt="CheatSheet widget on the iPhone Home Screen" /></td>
+    <td><img src="Docs/Images/cheatsheet-widget-gallery.png" alt="Small, medium, and large CheatSheet widgets on macOS" /></td>
+  </tr>
+</table>
+
+## Features
+
+- Create and edit short plain-text notes.
+- Search note titles and contents.
+- Render headings, bullets, and open or completed checklist lines in previews and widgets.
+- Choose from ten note colors and four system font styles.
+- Pin one note for the macOS, iOS, and iPadOS widgets.
+- Use small, medium, and large widget layouts with automatic content limits.
+- Move notes to Trash, restore them, delete them immediately, or let them expire after 30 days.
+- Capture a note and open recent notes from the macOS menu bar.
+- Use adaptive navigation for compact iPhone layouts and split-view iPad and Mac layouts.
+- Store notes locally with SwiftData and app-group persistence; no account or network connection is required.
+- See recoverable storage failures in the app and retry loading without overwriting stored notes.
+- Use native Liquid Glass controls on macOS and iOS/iPadOS 26 with system-material fallbacks on earlier supported releases.
+- Use semantic text styles, accessibility labels, and non-color selection indicators.
 
 ## Project Layout
 

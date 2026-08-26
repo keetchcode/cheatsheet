@@ -19,7 +19,7 @@ struct SettingsView: View {
             #endif
 
             Toggle("Show widget setup hint", isOn: $showWidgetHints)
-            Text("100% free and open source. Pin a note, then add the CheatSheet widget on supported platforms.")
+            Text("Pin a note, then add the CheatSheet widget on a supported platform.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 

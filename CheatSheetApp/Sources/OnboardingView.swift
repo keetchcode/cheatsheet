@@ -62,7 +62,7 @@ struct OnboardingView: View {
                     .font(.largeTitle)
                     .bold()
 
-                Text("100% free and open source. Liquid Glass notes for the coding commands you reach for every day.")
+                Text("Keep the coding commands you reach for every day close at hand.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
