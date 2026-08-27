@@ -401,6 +401,28 @@ Two changes were made this session:
    `xcodegen generate` to confirm it picks up the new value cleanly.
 
 No application code was changed this session (none of the findings rose to
-"confirmed, safely fixable code defect" — see the checklist for the one item
-that's a recommendation rather than a change: adding a Release build step to
-CI).
+"confirmed, safely fixable code defect").
+
+## 11. Final release readiness decision
+
+**READY WITH MANUAL APP STORE CONNECT ACTIONS.**
+
+Everything automatable from this environment is green: clean Debug and Release
+builds on both platforms, 55/55 unit tests × 2 (macOS arch pairs) + 55/55 (iOS)
++ 7/7 UI tests all passing, a verified and correctly-entitled macOS Release
+archive, no crash-risk patterns, no security/privacy issues, no known data-loss
+paths, and accurate privacy/entitlement declarations. This is not marked fully
+"READY FOR APP STORE SUBMISSION" because real submission still requires the
+app owner's own credentials and portal access — a Distribution certificate and
+a working iOS provisioning profile with the App Groups capability (the cached
+one in this environment is stale), the actual App Store Connect upload, and
+the App Store Connect-side privacy questionnaire/screenshots/listing fields —
+none of which can or should be done from an unattended environment without the
+owner's Apple ID.
+
+- **Commit**: `7a6ba19` on `main` ("chore: prepare app for next App Store
+  release")
+- **Release branch**: `release/app-store-readiness-v1.1-build13`, created from
+  that commit
+- **Version for this candidate**: marketing version 1.1 (unchanged — no
+  user-facing behavior changed), build 13 (bumped from 12)
