@@ -12,6 +12,6 @@ The source code is publicly available under the MIT License. Privacy-relevant ch
 
 ## Contact
 
-Support: <https://github.com/keetchcode/cheatsheet/issues>
+Support: <https://github.com/weskcode/cheatsheet/issues>
 
-Source: <https://github.com/keetchcode/cheatsheet>
+Source: <https://github.com/weskcode/cheatsheet>

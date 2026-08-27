@@ -64,6 +64,17 @@ jobs:
             -only-testing:CheatSheetiOSUITests/CheatSheetiOSUITests \
             CODE_SIGNING_ALLOWED=NO
 
+      - name: Build iOS Release configuration
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project CheatSheet.xcodeproj \
+            -scheme CheatSheetiOS \
+            -configuration Release \
+            -destination "id=${{ steps.simulator.outputs.udid }}" \
+            -derivedDataPath "$RUNNER_TEMP/CheatSheet-iOS-Release-DD" \
+            CODE_SIGNING_ALLOWED=NO
+
   macos:
     name: macOS Unit Tests
     runs-on: macos-15
@@ -97,4 +108,15 @@ jobs:
             -scheme CheatSheet \
             -destination 'platform=macOS' \
             -derivedDataPath "$RUNNER_TEMP/CheatSheet-macOS-DD" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Build macOS Release configuration
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project CheatSheet.xcodeproj \
+            -scheme CheatSheetApp \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -derivedDataPath "$RUNNER_TEMP/CheatSheet-macOS-Release-DD" \
             CODE_SIGNING_ALLOWED=NO
