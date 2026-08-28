@@ -153,10 +153,18 @@ final class NoteStore {
         }
     }
 
+    nonisolated static var defaultNoteTitle: String {
+        String(localized: "note.default.title", defaultValue: "New Cheat Sheet")
+    }
+
+    private nonisolated static var defaultNoteBody: String {
+        "# \(defaultNoteTitle)\n- "
+    }
+
     @discardableResult
     func addNote(
-        title: String = "New Cheat Sheet",
-        body: String = "# New Cheat Sheet\n- ",
+        title: String = NoteStore.defaultNoteTitle,
+        body: String = NoteStore.defaultNoteBody,
         tintHex: String = CheatSheetPalette.blue.rawValue
     ) -> CheatSheetNote.ID {
         let note = CheatSheetNote(

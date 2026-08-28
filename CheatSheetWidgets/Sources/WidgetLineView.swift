@@ -27,7 +27,9 @@ struct WidgetLineView: View {
 
     private var accessibilityLabel: String {
         guard line.isTask else { return line.text }
-        return line.isComplete ? "Complete, \(line.text)" : "Incomplete, \(line.text)"
+        return line.isComplete
+            ? String(localized: "checklist.line.complete", defaultValue: "Complete, \(line.text)")
+            : String(localized: "checklist.line.incomplete", defaultValue: "Incomplete, \(line.text)")
     }
 
     private var textStyle: Color {
