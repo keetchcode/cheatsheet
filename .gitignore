@@ -19,3 +19,27 @@ CheatSheet *.xcodeproj/
 # Swift Package Manager
 .build/
 .swiftpm/
+
+# Local secrets and signing material
+.env
+.env.*
+*.mobileprovision
+*.p12
+*.cer
+*.pem
+APIKey.plist
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# AI coding agent local state and session artifacts
+.claude/
+.codex/
+.cursor/
+CLAUDE.local.md
+*.audit.md
+*.qa-report.md
+*-release-audit.md
+*-release-qa-report.md
+*-release-checklist.md

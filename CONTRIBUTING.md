@@ -47,6 +47,23 @@ Team ID and app groups. Update `project.yml`, the macOS and iOS entitlement file
 under `CheatSheetApp/` and `CheatSheetWidgets/`, and
 `Shared/Sources/CheatSheetNote.swift`, then run `xcodegen generate`.
 
+## Branching (Git Flow)
+
+This project follows [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/):
+
+- `main` — always reflects the latest released version. Only release and hotfix branches merge here.
+- `develop` — integration branch for the next release. Feature branches merge here.
+- `feature/<short-name>` — new work, branched from `develop`. Merge back into `develop` via pull request when done.
+- `release/<version>` — cut from `develop` to stabilize a release (version bumps, release notes, final QA). Merges into both `main` (tagged) and back into `develop`.
+- `hotfix/<short-name>` — urgent fixes branched from `main`. Merges into both `main` (tagged) and `develop`.
+
+Guidelines:
+
+- Never commit directly to `main` or `develop`; use a pull request.
+- Keep branch names lowercase and hyphenated, e.g. `feature/widget-color-picker`, `hotfix/checklist-crash`.
+- Delete a branch after it merges.
+- Tag every merge into `main` with the release version (e.g. `v1.2.0`).
+
 ## Code Style
 
 - Prefer SwiftUI and system frameworks.
