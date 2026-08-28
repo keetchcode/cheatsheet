@@ -46,7 +46,7 @@ public extension String {
             }
         }
 
-        return "Empty note"
+        return String(localized: "note.previewEmpty", defaultValue: "Empty note")
     }
 
     var parsedChecklistLine: (text: String, isTask: Bool, isComplete: Bool, isHeading: Bool) {

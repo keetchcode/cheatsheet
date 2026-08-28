@@ -185,7 +185,7 @@ struct MenuBarQuickAccessView: View {
     }
 
     private static func title(for text: String) -> String {
-        let fallback = "Quick Note"
+        let fallback = String(localized: "menuBar.quickCapture.defaultTitle", defaultValue: "Quick Note")
         guard let firstLine = text
             .split(whereSeparator: \.isNewline)
             .map({ String($0).trimmingCharacters(in: .whitespacesAndNewlines) })

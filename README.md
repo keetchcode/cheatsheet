@@ -47,6 +47,24 @@ CheatSheet includes WidgetKit extensions for macOS, iOS, and iPadOS. Widgets fol
 - See recoverable storage failures in the app and retry loading without overwriting stored notes.
 - Use native Liquid Glass controls throughout on macOS and iOS/iPadOS 26.
 - Use semantic text styles, accessibility labels, and non-color selection indicators.
+- Available in English and Spanish, with locale-aware date and time formatting throughout.
+
+## Localization
+
+CheatSheet ships fully localized in English and neutral international Spanish
+(`es`), including onboarding, the first-run starter notes, accessibility labels,
+error messages, and the WidgetKit extension. Strings live in String Catalogs:
+
+```text
+CheatSheetApp/Resources/Localizable.xcstrings       App and shared-model strings
+CheatSheetWidgets/Resources/Localizable.xcstrings    Widget extension strings
+```
+
+`Scripts/verify-localization.sh` checks both catalogs for missing translations,
+mismatched `%@`/`%lld` placeholders between languages, and untranslated stable
+keys; it runs in CI alongside `Scripts/verify-project-config.sh`. Adding a new
+user-visible string requires adding both an English and a Spanish entry to the
+relevant catalog.
 
 ## Project Layout
 
