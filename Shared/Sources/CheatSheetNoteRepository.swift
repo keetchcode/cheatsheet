@@ -16,17 +16,23 @@ public enum CheatSheetStorageError: Error, Equatable, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case let .appGroupUnavailable(identifier):
-            "App Group is unavailable: \(identifier)"
+            String(localized: "storageError.appGroupUnavailable", defaultValue: "App Group is unavailable: \(identifier)")
         case .repositoryUnavailable:
-            "Note storage is unavailable."
+            String(localized: "storageError.repositoryUnavailable", defaultValue: "Note storage is unavailable.")
         case .noteEncodingFailed:
-            "Could not encode notes for storage."
+            String(localized: "storageError.noteEncodingFailed", defaultValue: "Could not encode notes for storage.")
         case .noteDecodingFailed:
-            "Stored notes could not be read."
+            String(localized: "storageError.noteDecodingFailed", defaultValue: "Stored notes could not be read.")
         case .widgetSnapshotDecodingFailed:
-            "The widget note snapshot could not be read."
+            String(
+                localized: "storageError.widgetSnapshotDecodingFailed",
+                defaultValue: "The widget note snapshot could not be read."
+            )
         case .widgetSnapshotEncodingFailed:
-            "Could not encode the widget note snapshot."
+            String(
+                localized: "storageError.widgetSnapshotEncodingFailed",
+                defaultValue: "Could not encode the widget note snapshot."
+            )
         }
     }
 }

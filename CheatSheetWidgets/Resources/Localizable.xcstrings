@@ -1,0 +1,114 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CheatSheet" : {
+      "comment" : "Widget gallery configuration display name. Product/brand name, do not translate.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CheatSheet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CheatSheet"
+          }
+        }
+      }
+    },
+    "Keep a pinned coding note nearby." : {
+      "comment" : "Widget gallery description shown under the widget name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep a pinned coding note nearby."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten cerca una nota de programación fijada."
+          }
+        }
+      }
+    },
+    "Pin or create a note in CheatSheet to show it here." : {
+      "comment" : "Widget empty-state message shown when no note is pinned.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pin or create a note in CheatSheet to show it here."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fija o crea una nota en CheatSheet para mostrarla aquí."
+          }
+        }
+      }
+    },
+    "checklist.line.complete" : {
+      "comment" : "Accessibility label prefix for a completed checklist line. %@ is the line's text content (user-authored, not translated).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complete, %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completada, %@"
+          }
+        }
+      }
+    },
+    "checklist.line.incomplete" : {
+      "comment" : "Accessibility label prefix for an open checklist line. %@ is the line's text content (user-authored, not translated).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incomplete, %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendiente, %@"
+          }
+        }
+      }
+    },
+    "widget.emptyState.title" : {
+      "comment" : "Widget headline shown when no note is pinned.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Widget Note"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin nota en el widget"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.1"
+}

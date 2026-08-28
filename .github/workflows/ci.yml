@@ -35,6 +35,9 @@ jobs:
       - name: Verify project configuration
         run: Scripts/verify-project-config.sh
 
+      - name: Verify localization catalogs
+        run: Scripts/verify-localization.sh
+
       - name: Resolve iOS simulator
         id: simulator
         run: |
@@ -62,6 +65,7 @@ jobs:
             -destination "id=${{ steps.simulator.outputs.udid }}" \
             -derivedDataPath "$RUNNER_TEMP/CheatSheet-iOS-UI-DD" \
             -only-testing:CheatSheetiOSUITests/CheatSheetiOSUITests \
+            -only-testing:CheatSheetiOSUITests/CheatSheetiOSSpanishLocaleUITests \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Build iOS Release configuration

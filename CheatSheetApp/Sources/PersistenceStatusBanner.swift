@@ -46,17 +46,25 @@ struct PersistenceStatusBanner: View {
     }
 
     private var title: String {
-        canRetryLoad ? "Notes could not be opened" : "Changes are not being saved"
+        canRetryLoad
+            ? String(localized: "persistence.title.loadFailed", defaultValue: "Notes could not be opened")
+            : String(localized: "persistence.title.saveFailed", defaultValue: "Changes are not being saved")
     }
 
     private var failureMessage: String? {
         switch status {
         case let .loadFailed(message):
             canRetryLoad
-                ? "\(message) Editing is paused so your stored notes are not overwritten."
+                ? String(
+                    localized: "persistence.loadFailed.retryable",
+                    defaultValue: "\(message) Editing is paused so your stored notes are not overwritten."
+                )
                 : message
         case let .saveFailed(message):
-            "\(message) Recent edits are only in memory."
+            String(
+                localized: "persistence.saveFailed.suffix",
+                defaultValue: "\(message) Recent edits are only in memory."
+            )
         case .ready, .saving, .saved:
             nil
         }

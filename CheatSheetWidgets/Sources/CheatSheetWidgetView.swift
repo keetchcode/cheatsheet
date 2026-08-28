@@ -40,7 +40,7 @@ struct CheatSheetWidgetView: View {
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: family.verticalSpacing) {
             header(
-                title: "No Widget Note",
+                title: String(localized: "widget.emptyState.title", defaultValue: "No Widget Note"),
                 systemImage: "note.text.badge.plus",
                 tint: CheatSheetPalette.blue.color,
                 fontStyle: .rounded
