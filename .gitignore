@@ -43,3 +43,8 @@ CLAUDE.local.md
 *-release-audit.md
 *-release-qa-report.md
 *-release-checklist.md
+
+# App Store screenshot workspace: keep planning docs, templates, and the
+# curated final set; raw/candidate captures are large and regeneratable.
+AppStoreScreenshots/raw/
+AppStoreScreenshots/candidates/

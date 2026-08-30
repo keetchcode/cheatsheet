@@ -1,0 +1,66 @@
+{
+  "source": "Derived from CheatSheetApp/Sources/{AppDesign,AppTheme,ViewModifiers}.swift and Shared/Sources/CheatSheetNote.swift — verified against actual constants, not estimated.",
+  "brandPrimary": {
+    "hex": "4B88FF",
+    "name": "CheatSheet Blue",
+    "evidence": "AccentColor.colorset sRGB (0.294, 0.533, 1.000) == CheatSheetPalette.blue (\"4B88FF\") exactly. This is the true brand primary, not a guess."
+  },
+  "palette": [
+    { "name": "Blue", "hex": "4B88FF" },
+    { "name": "Cyan", "hex": "45C7C4" },
+    { "name": "Violet", "hex": "8B7CFF" },
+    { "name": "Mint", "hex": "59C979" },
+    { "name": "Lime", "hex": "8FBF3F" },
+    { "name": "Amber", "hex": "D99A2B" },
+    { "name": "Coral", "hex": "E86F51" },
+    { "name": "Rose", "hex": "E85D75" },
+    { "name": "Indigo", "hex": "5D6BFF" },
+    { "name": "Graphite", "hex": "5C6470" }
+  ],
+  "colorMode": "Full light/dark support, branches explicitly on colorScheme (AppTheme.swift). No forced single mode.",
+  "windowBackdrop": {
+    "dark": ["#141923", "#1A2130", "#0D111C"],
+    "light": ["#FFFFFF (94% opacity)", "#E8F0F7", "#DAE2E6"],
+    "evidence": "AppTheme.windowGradient(for:) exact RGB values, linear gradient topLeading->bottomTrailing"
+  },
+  "materialTreatment": {
+    "primary": "Native Liquid Glass (.glassEffect / .buttonStyle(.glass...) / GlassEffectContainer) on macOS 26+ / iOS 26+",
+    "fallback": "content: .regularMaterial (dark) / .ultraThinMaterial (light) on earlier supported OS (macOS 15+/iOS 18+)",
+    "noteContentSurface": ".regularMaterial base + palette-tint overlay at 9-16% opacity + 1px hairline stroke at 8-14% opacity",
+    "evidence": "ViewModifiers.swift: LiquidGlassPanelModifier, NoteContentSurfaceModifier"
+  },
+  "typography": {
+    "noteFontChoices": ["monospaced (default)", "system", "rounded", "serif"],
+    "uiChrome": "System semantic text styles throughout (.title, .callout, .caption, .headline) — Dynamic Type respected, no custom typeface",
+    "evidence": "CheatSheetFontStyle enum, Font.Design mapping"
+  },
+  "cornerRadii": {
+    "editorPanel": 20,
+    "previewCard": 24,
+    "control": 14,
+    "onboardingPanel": 30
+  },
+  "spacing": {
+    "windowPadding": 24,
+    "panelPadding": 16,
+    "panelSpacing": 16,
+    "editorTextPadding": 18,
+    "minimumHitTarget": 44
+  },
+  "iconLanguage": {
+    "system": "SF Symbols exclusively, no custom iconography",
+    "recurring": ["note.text", "pin.fill / pin", "archivebox / archivebox.fill", "checkmark.circle.fill / circle", "text.page.fill", "square.and.pencil"]
+  },
+  "motionPersonality": "Restrained — a single .snappy(duration: 0.22) selection animation on the palette swatch; no bouncy/playful motion anywhere in the codebase.",
+  "emotionalTone": "Calm, precise, get-in-get-out utility. Product principles explicitly state 'deliberately narrow.' No celebratory confetti, no gamification, no streaks/badges.",
+  "appIcon": {
+    "asset": "CheatSheetApp/Resources/Assets.xcassets/AppIcon.appiconset",
+    "marketingSize1024": "1024x1024, no alpha channel (verified with sips)"
+  },
+  "doNotIntroduce": [
+    "Unrelated neon/purple-blue generic AI-gradient backdrops not derived from AppTheme's actual gradient stops",
+    "Stock photography or hands-on-devices imagery — nothing like that exists in the app or its current marketing",
+    "Playful/bouncy motion or confetti — contradicts the app's own restrained animation choices",
+    "Any claim of cloud sync, collaboration, or accounts — none exist"
+  ]
+}

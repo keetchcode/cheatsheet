@@ -124,6 +124,7 @@ targets:
       - path: CheatSheetTests/Sources
       - path: Shared/Sources
       - path: CheatSheetApp/Sources/NoteStore.swift
+      - path: CheatSheetApp/Sources/ScreenshotDemoContent.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.wesleycheatsheet.tests
@@ -183,6 +184,7 @@ targets:
       - path: CheatSheetTests/Sources
       - path: Shared/Sources
       - path: CheatSheetApp/Sources/NoteStore.swift
+      - path: CheatSheetApp/Sources/ScreenshotDemoContent.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.wesleykeetch.wesleycheatsheet.ios.tests
