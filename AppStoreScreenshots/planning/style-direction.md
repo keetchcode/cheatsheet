@@ -48,7 +48,7 @@ re-derive the layout by hand.
 
 ## Applies to
 
-The full 16-concept shortlist in `shortlist.md`, across iPhone, iPad, and
+The full 15-concept shortlist in `shortlist.md`, across iPhone, iPad, and
 Mac. iPad reuses the same phone-style bezel proportions adjusted for its own
 aspect ratio; Mac needs a different frame treatment entirely (no phone
 bezel — a window-chrome or bezel-free full-bleed treatment, since Mac
