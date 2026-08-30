@@ -87,4 +87,19 @@ struct LocalizationTests {
     @Test func defaultNoteTitleIsStableAndNonEmpty() {
         #expect(NoteStore.defaultNoteTitle == "New Cheat Sheet")
     }
+
+    @Test func screenshotDemoContentIsWellFormed() {
+        let notes = ScreenshotDemoContent.notes
+
+        #expect(notes.count == 8)
+        #expect(notes.filter(\.isPinned).count == 1, "Exactly one demo note should be pinned so the widget capture is unambiguous.")
+        #expect(Set(notes.map(\.title)).count == notes.count, "Demo note titles must be distinct.")
+        #expect(Set(notes.map(\.tintHex)).count == notes.count, "Demo notes should each use a distinct palette color to show organization.")
+
+        for note in notes {
+            #expect(!note.title.isEmpty)
+            #expect(!note.body.isEmpty)
+            #expect(note.displayLines.isEmpty == false, "Demo note body should parse into displayable lines.")
+        }
+    }
 }
