@@ -138,7 +138,9 @@ def compose(screenshot_path, eyebrow, headline, canvas_w, canvas_h, out_path,
     phone_top = max(phone_top, caption_bottom)
     phone_left = (W - phone_w) // 2
 
-    bezel_radius = int(phone_w * 0.115)
+    # iPads have a visibly smaller corner radius relative to device width
+    # than iPhones — verified against reference photos, not guessed.
+    bezel_radius = int(phone_w * (0.115 if device == "iphone" else 0.06))
     bezel = diagonal_gradient(phone_w, phone_h, 180,
                                [(0.0, BEZEL_TOP), (0.22, BEZEL_MID), (0.78, BEZEL_MID), (1.0, BEZEL_BOTTOM)])
     bezel_mask = rounded_mask((phone_w, phone_h), bezel_radius)
@@ -167,14 +169,25 @@ def compose(screenshot_path, eyebrow, headline, canvas_w, canvas_h, out_path,
     phone_img.paste(bezel, (0, 0), bezel_mask)
     phone_img.paste(shot_resized, (bezel_pad, bezel_pad), screen_mask)
 
-    # dynamic island
+    # Camera cutout — device-specific, since real iPhones and iPads differ
+    # (verified against reference photos, not guessed): iPhone Pro-class
+    # devices show a pill-shaped Dynamic Island; iPad Pro/Air models show a
+    # small circular camera dot, no pill.
     pd = ImageDraw.Draw(phone_img)
-    isl_w = int(phone_w * 0.27)
-    isl_h = int(phone_w * 0.025)
-    isl_x = (phone_w - isl_w) // 2
-    isl_y = int(phone_h * 0.034)
-    pd.rounded_rectangle([isl_x, isl_y, isl_x + isl_w, isl_y + isl_h],
-                          radius=isl_h // 2, fill=(0, 0, 0))
+    if device == "iphone":
+        isl_w = int(phone_w * 0.27)
+        isl_h = int(phone_w * 0.025)
+        isl_x = (phone_w - isl_w) // 2
+        isl_y = int(phone_h * 0.034)
+        pd.rounded_rectangle([isl_x, isl_y, isl_x + isl_w, isl_y + isl_h],
+                              radius=isl_h // 2, fill=(0, 0, 0))
+    elif device == "ipad":
+        dot_r = int(phone_w * 0.009)
+        dot_x = phone_w // 2
+        dot_y = int(phone_h * 0.022)
+        pd.ellipse([dot_x - dot_r, dot_y - dot_r, dot_x + dot_r, dot_y + dot_r], fill=(0, 0, 0))
+    else:
+        raise ValueError(f"device {device!r} has no bezel treatment yet — see style-direction.md; only 'iphone' and 'ipad' are implemented")
 
     phone_mask = rounded_mask((phone_w, phone_h), bezel_radius)
     canvas.paste(phone_img, (phone_left, phone_top), phone_mask)
@@ -190,7 +203,7 @@ if __name__ == "__main__":
     p.add_argument("--headline", required=True)
     p.add_argument("--canvas-size", default="1320x2868")
     p.add_argument("--out", required=True)
-    p.add_argument("--device", default="iphone")
+    p.add_argument("--device", default="iphone", choices=["iphone", "ipad"])
     args = p.parse_args()
     w, h = (int(v) for v in args.canvas_size.split("x"))
     out = compose(args.screenshot, args.eyebrow, args.headline, w, h, args.out, args.device)
