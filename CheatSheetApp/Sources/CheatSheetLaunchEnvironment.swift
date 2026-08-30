@@ -10,9 +10,17 @@ enum CheatSheetLaunchEnvironment {
     static let uiTestingArgument = "-cheatsheet-ui-testing"
     static let resetOnboardingArgument = "-cheatsheet-reset-onboarding"
     static let skipOnboardingArgument = "-cheatsheet-skip-onboarding"
+    /// Seeds `ScreenshotDemoContent.notes` into the same isolated in-memory
+    /// store UI tests use, so App Store captures are reproducible without
+    /// manual tapping and never touch a real device's notes.
+    static let seedScreenshotDemoArgument = "-cheatsheet-seed-screenshot-demo"
 
     static var isUITesting: Bool {
         arguments.contains(uiTestingArgument)
+    }
+
+    static var isSeedingScreenshotDemo: Bool {
+        arguments.contains(seedScreenshotDemoArgument)
     }
 
     private static var arguments: [String] {
@@ -39,9 +47,15 @@ enum CheatSheetLaunchEnvironment {
         }
 
         do {
-            return SwiftDataCheatSheetNoteRepository(
+            let repository = SwiftDataCheatSheetNoteRepository(
                 container: try SwiftDataCheatSheetNoteRepository.makeInMemoryContainer()
             )
+
+            if isSeedingScreenshotDemo {
+                try repository.saveNotes(ScreenshotDemoContent.notes)
+            }
+
+            return repository
         } catch {
             return UnavailableCheatSheetNoteRepository()
         }
