@@ -1,6 +1,6 @@
 # CheatSheet — Shortlist
 
-16 unique, evidence-verified concepts survived generation + scoring + a
+15 unique, evidence-verified concepts survived generation + scoring + a
 targeted retry (the original 5-lens run lost one lens to a transient rate
 limit — retried directly and it produced the strongest hook set in the whole
 pool). That's short of the brief's 20+ target after quality filtering —
