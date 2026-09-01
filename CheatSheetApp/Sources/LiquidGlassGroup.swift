@@ -5,20 +5,8 @@ struct LiquidGlassGroup<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        #if os(macOS)
-        if #available(macOS 26.0, *) {
-            GlassEffectContainer(spacing: spacing) {
-                content
-            }
-        } else {
-            content
-        }
-        #elseif os(iOS)
-        if #available(iOS 26.0, *) {
-            GlassEffectContainer(spacing: spacing) {
-                content
-            }
-        } else {
+        #if os(macOS) || os(iOS)
+        GlassEffectContainer(spacing: spacing) {
             content
         }
         #else

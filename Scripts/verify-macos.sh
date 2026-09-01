@@ -13,6 +13,10 @@ if ! command -v xcodegen >/dev/null 2>&1; then
     exit 1
 fi
 
+# Local machines may carry an Xcode beta. Warn rather than fail: beta-SDK
+# builds are fine for development, but must never be archived for submission.
+"$repo_root/Scripts/verify-build-sdk.sh" --warn
+
 print "Generating a local project outside File Provider..."
 xcodegen generate \
     --spec "$repo_root/project.yml" \
