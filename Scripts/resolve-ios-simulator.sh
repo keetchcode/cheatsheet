@@ -12,6 +12,12 @@
 # runtime may still be older than the app supports, and the whole suite runs
 # green against a configuration nobody ships. Below the floor we fail loudly
 # rather than substituting an older runtime.
+#
+# There is a ceiling too. simctl keeps listing a beta OS runtime as available
+# after you switch back to the release Xcode, and "newest wins" would then send
+# every shipping test run onto the beta OS. Runtimes from a newer major than the
+# active SDK are excluded, so the toolchain sets the ceiling and an iOS 27
+# branch needs no special case.
 
 set -euo pipefail
 
@@ -26,6 +32,12 @@ case "$device_family" in
 esac
 
 min_runtime="${CHEATSHEET_MIN_IOS_RUNTIME:-26.5}"
+
+if ! sdk_version=$(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null); then
+    print -u2 "error: no iOS simulator SDK in $(xcode-select -p)"
+    exit 2
+fi
+sdk_major="${sdk_version%%.*}"
 
 udid=$(xcrun simctl list devices available --json | python3 -c '
 import json, re, sys
@@ -46,7 +58,7 @@ def family(device, prefix):
     return device["name"].startswith(prefix)
 
 
-prefix, raw_floor = sys.argv[1], sys.argv[2]
+prefix, raw_floor, sdk_major = sys.argv[1], sys.argv[2], int(sys.argv[3])
 
 parts = raw_floor.split(".")
 if not (1 <= len(parts) <= 2) or not all(p.isdigit() for p in parts):
@@ -66,7 +78,10 @@ candidates = [
     (version(runtime), device["name"].startswith(prefix), device["name"], device["udid"])
     for runtime, entries in runtimes.items()
     for device in entries
-    if device.get("isAvailable") and family(device, prefix) and version(runtime) >= floor
+    if device.get("isAvailable")
+    and family(device, prefix)
+    and version(runtime) >= floor
+    and version(runtime)[0] <= sdk_major
 ]
 
 if candidates:
@@ -76,13 +91,19 @@ if candidates:
 lines = [
     "error: no %s simulator available on iOS %s or newer" % (prefix, raw_floor),
     "  required: iOS >= %s (override with CHEATSHEET_MIN_IOS_RUNTIME)" % raw_floor,
+    "  ceiling:  iOS major <= %d (the active simulator SDK)" % sdk_major,
     "  found, by runtime:",
 ]
 if runtimes:
     for runtime in sorted(runtimes, key=version, reverse=True):
         matching = [d for d in runtimes[runtime] if d.get("isAvailable") and family(d, prefix)]
         major, minor = version(runtime)
-        note = "" if (major, minor) >= floor else "   (below floor)"
+        if major > sdk_major:
+            note = "   (newer than the active SDK)"
+        elif (major, minor) < floor:
+            note = "   (below floor)"
+        else:
+            note = ""
         lines.append("    iOS %d.%d  %d %s%s" % (major, minor, len(matching), prefix, note))
 else:
     lines.append("    (no iOS runtimes installed)")
@@ -90,6 +111,6 @@ lines.append("  fix: install a runtime via Xcode > Settings > Components, then c
 lines.append("       xcrun simctl create <name> <device-type-id> <runtime-id>")
 sys.stderr.write("\n".join(lines) + "\n")
 raise SystemExit(1)
-' "$device_prefix" "$min_runtime")
+' "$device_prefix" "$min_runtime" "$sdk_major")
 
 print "$udid"
