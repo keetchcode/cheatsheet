@@ -56,6 +56,13 @@ above a floor**, defaulting to 26.5 and overridable with
 breakdown rather than substituting an older runtime — a green suite that ran
 against an unsupported configuration certifies nothing.
 
+There is a ceiling as well as a floor: runtimes from a newer major than the
+active simulator SDK are excluded. `simctl` keeps listing a beta OS runtime as
+available after you switch back to the release Xcode, and "newest wins" would
+otherwise send every shipping test run onto the beta OS. Because the ceiling
+comes from the toolchain, an iOS 27 branch needs no special case — selecting
+Xcode 27 raises it automatically.
+
 It matches device family on `deviceTypeIdentifier`, not the display name: a
 simulator can be renamed to anything and still be an iPhone, and name matching
 silently hid four real iPhone simulators on this machine.
