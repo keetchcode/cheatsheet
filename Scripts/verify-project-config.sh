@@ -33,6 +33,26 @@ abort "archive preActions must not mutate project.yml" if project.include?("preA
 hardened_runtime_count = project.scan(/ENABLE_HARDENED_RUNTIME:\s*YES/).length
 abort "expected Hardened Runtime on macOS app and widget Release settings" unless hardened_runtime_count >= 2
 
+# The shipping floor is a contract. Nothing else in the build asserts it: the
+# SDK check only sees the toolchain, and the simulator resolver only sees
+# runtimes, so a silent regression to an older deployment target would pass
+# every other gate.
+minimum_floor = Gem::Version.new("26.0")
+{ "iOS" => /^\s*iOS:\s*"([0-9.]+)"/, "macOS" => /^\s*macOS:\s*"([0-9.]+)"/ }.each do |platform, pattern|
+  match = project.match(pattern)
+  abort "project.yml must declare a #{platform} deployment target" if match.nil?
+  actual = Gem::Version.new(match[1])
+  if actual < minimum_floor
+    abort "#{platform} deployment target #{actual} is below the supported floor #{minimum_floor}"
+  end
+end
+
+# options.deploymentTarget.macOS is the single source of truth. A second
+# MACOSX_DEPLOYMENT_TARGET in settings.base silently overrides it.
+if project.include?("MACOSX_DEPLOYMENT_TARGET")
+  abort "remove MACOSX_DEPLOYMENT_TARGET from settings.base; options.deploymentTarget.macOS owns the macOS floor"
+end
+
 ios_group = "group.com.wesleykeetch.wesleycheatsheet"
 mac_group = "HD39MR492X.com.wesleykeetch.wesleycheatsheet"
 

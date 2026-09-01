@@ -45,7 +45,7 @@ CheatSheet includes WidgetKit extensions for macOS, iOS, and iPadOS. Widgets fol
 - Use adaptive navigation for compact iPhone layouts and split-view iPad and Mac layouts.
 - Store notes locally with SwiftData and app-group persistence; no account or network connection is required.
 - See recoverable storage failures in the app and retry loading without overwriting stored notes.
-- Use native Liquid Glass controls on macOS and iOS/iPadOS 26 with system-material fallbacks on earlier supported releases.
+- Use native Liquid Glass controls throughout on macOS and iOS/iPadOS 26.
 - Use semantic text styles, accessibility labels, and non-color selection indicators.
 
 ## Project Layout
@@ -65,8 +65,9 @@ project.yml          XcodeGen project definition
 
 ## Requirements
 
-- macOS 15 or later, or iOS/iPadOS 18 or later
-- Xcode 26 or later
+- macOS 26 or later, or iOS/iPadOS 26 or later
+- Xcode 26 for submission builds. An Xcode 27 beta is fine for development only
+  — see the [OS support policy](Docs/os-support-policy.md).
 - XcodeGen
 
 Install XcodeGen with Homebrew:
@@ -81,6 +82,13 @@ Generate the project:
 
 ```sh
 xcodegen generate
+```
+
+Confirm the active toolchain ships the SDK this branch targets. Required before
+archiving for the App Store:
+
+```sh
+Scripts/verify-build-sdk.sh
 ```
 
 Build from the command line:
@@ -109,11 +117,14 @@ xcodebuild test -project CheatSheet.xcodeproj -scheme CheatSheetiOS -destination
 ```
 
 `Scripts/resolve-ios-simulator.sh` prints the newest available iPhone simulator
-UDID. Prefer it over a device name: a bare `name=iPhone 16` destination resolves
-to `OS:latest`, which fails once the installed runtime is newer than that device
-(iOS 26 ships the iPhone 17 family, not the iPhone 16).
+UDID that meets the minimum test runtime (iOS 26.5; override with
+`CHEATSHEET_MIN_IOS_RUNTIME`). Prefer it over a device name: a bare
+`name=iPhone 17` destination resolves to `OS:latest`, which fails once the
+installed runtime is newer than that device. It fails loudly rather than falling
+back to a runtime below the floor, so the suite cannot pass against a
+configuration the app does not support.
 
-To check the iPad layout, resolve the newest installed iPad simulator:
+To check the iPad layout, resolve the newest qualifying iPad simulator:
 
 ```sh
 xcodebuild build -project CheatSheet.xcodeproj -scheme CheatSheetiOS -destination "id=$(Scripts/resolve-ios-simulator.sh ipad)" -derivedDataPath /tmp/CheatSheet-iPad-DD CODE_SIGNING_ALLOWED=NO

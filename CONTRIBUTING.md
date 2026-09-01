@@ -6,7 +6,10 @@ This project is meant to stay small, native, and easy to build. The best contrib
 
 ## Development Setup
 
-1. Install Xcode 26 or later.
+1. Install Xcode 26. An Xcode 27 beta is fine for development, but must
+   never be used for a submission build — see `Docs/os-support-policy.md`.
+   The app requires macOS 26 / iOS 26, so a Mac running macOS 26 or later is
+   needed to run the macOS app and its tests.
 2. Install XcodeGen.
 3. Generate the project.
 
@@ -19,6 +22,15 @@ xcodegen generate
 
 ```sh
 Scripts/verify-macos.sh
+```
+
+## Verifying the Build SDK
+
+Before archiving for the App Store, confirm the active toolchain ships the
+SDK this branch targets. A beta SDK is rejected at upload.
+
+```sh
+Scripts/verify-build-sdk.sh
 ```
 
 ## Running Tests
@@ -40,6 +52,10 @@ xcodegen generate --spec project.yml
 xcodebuild test -project CheatSheet.xcodeproj -scheme CheatSheetiOS -destination "id=$(Scripts/resolve-ios-simulator.sh)" -derivedDataPath /tmp/CheatSheet-iOS-Test-DD CODE_SIGNING_ALLOWED=NO
 ```
 
+Tests run on iOS 26.5 or newer. `Scripts/resolve-ios-simulator.sh` fails rather
+than selecting an older runtime; install a newer simulator via Xcode > Settings >
+Components, or override the floor with `CHEATSHEET_MIN_IOS_RUNTIME`.
+
 ## Widget Signing
 
 The widgets need a shared app group. Forks should use their own Apple Developer
@@ -56,6 +72,9 @@ This project follows [Git Flow](https://nvie.com/posts/a-successful-git-branchin
 - `feature/<short-name>` — new work, branched from `develop`. Merge back into `develop` via pull request when done.
 - `release/<version>` — cut from `develop` to stabilize a release (version bumps, release notes, final QA). Merges into both `main` (tagged) and back into `develop`.
 - `hotfix/<short-name>` — urgent fixes branched from `main`. Merges into both `main` (tagged) and `develop`.
+- `feature/ios-<major>-readiness` — long-lived OS adoption branch off `develop`, carrying a different SDK
+  contract from the shipping line. Keep it thin and merge `develop` into it often. See
+  [`Docs/os-support-policy.md`](Docs/os-support-policy.md).
 
 Guidelines:
 
@@ -63,6 +82,7 @@ Guidelines:
 - Keep branch names lowercase and hyphenated, e.g. `feature/widget-color-picker`, `hotfix/checklist-crash`.
 - Delete a branch after it merges.
 - Tag every merge into `main` with the release version (e.g. `v1.2.0`).
+- Keep `main` and `develop` submittable at all times. Beta-SDK work belongs on an OS readiness branch.
 
 ## Code Style
 

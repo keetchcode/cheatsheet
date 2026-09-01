@@ -8,29 +8,11 @@ extension View {
 
     @ViewBuilder
     func glassCompatibleButtonStyle(prominent: Bool = false) -> some View {
-        #if os(macOS)
-        if #available(macOS 26.0, *) {
-            if prominent {
-                self.buttonStyle(.glassProminent)
-            } else {
-                self.buttonStyle(.glass)
-            }
-        } else if prominent {
-            self.buttonStyle(.borderedProminent)
+        #if os(macOS) || os(iOS)
+        if prominent {
+            self.buttonStyle(.glassProminent)
         } else {
-            self.buttonStyle(.bordered)
-        }
-        #elseif os(iOS)
-        if #available(iOS 26.0, *) {
-            if prominent {
-                self.buttonStyle(.glassProminent)
-            } else {
-                self.buttonStyle(.glass)
-            }
-        } else if prominent {
-            self.buttonStyle(.borderedProminent)
-        } else {
-            self.buttonStyle(.bordered)
+            self.buttonStyle(.glass)
         }
         #else
         if prominent {
@@ -74,31 +56,11 @@ private struct LiquidGlassPanelModifier: ViewModifier {
     let interactive: Bool
 
     func body(content: Content) -> some View {
-        #if os(macOS)
-        if #available(macOS 26.0, *) {
-            if interactive {
-                content.glassEffect(.regular.tint(tint.opacity(glassTintOpacity)).interactive(), in: .rect(cornerRadius: cornerRadius))
-            } else {
-                content.glassEffect(.regular.tint(tint.opacity(glassTintOpacity)), in: .rect(cornerRadius: cornerRadius))
-            }
+        #if os(macOS) || os(iOS)
+        if interactive {
+            content.glassEffect(.regular.tint(tint.opacity(glassTintOpacity)).interactive(), in: .rect(cornerRadius: cornerRadius))
         } else {
-            content.background(
-                AppTheme.glassFallbackFill(for: colorScheme),
-                in: RoundedRectangle(cornerRadius: cornerRadius)
-            )
-        }
-        #elseif os(iOS)
-        if #available(iOS 26.0, *) {
-            if interactive {
-                content.glassEffect(.regular.tint(tint.opacity(glassTintOpacity)).interactive(), in: .rect(cornerRadius: cornerRadius))
-            } else {
-                content.glassEffect(.regular.tint(tint.opacity(glassTintOpacity)), in: .rect(cornerRadius: cornerRadius))
-            }
-        } else {
-            content.background(
-                AppTheme.glassFallbackFill(for: colorScheme),
-                in: RoundedRectangle(cornerRadius: cornerRadius)
-            )
+            content.glassEffect(.regular.tint(tint.opacity(glassTintOpacity)), in: .rect(cornerRadius: cornerRadius))
         }
         #else
         content.background(

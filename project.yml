@@ -2,13 +2,12 @@ name: CheatSheet
 options:
   bundleIdPrefix: com.wesleykeetch
   deploymentTarget:
-    macOS: "15.0"
-    iOS: "18.0"
+    macOS: "26.0"
+    iOS: "26.0"
   createIntermediateGroups: true
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MACOSX_DEPLOYMENT_TARGET: "15.0"
     GENERATE_INFOPLIST_FILE: YES
     ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     MARKETING_VERSION: "1.1"

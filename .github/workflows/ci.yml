@@ -9,7 +9,7 @@ on:
 jobs:
   ios:
     name: iOS Unit Tests
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 30
 
     steps:
@@ -18,10 +18,17 @@ jobs:
 
       - name: Select Xcode 26
         run: |
+          # Prefer an explicitly versioned Xcode 26 bundle, else keep the image
+          # default. A bundle name cannot guarantee an SDK version, so the real
+          # gate is the "Verify build SDK" step below.
           xcode_path=$(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' -print | sort -V | tail -n 1)
-          test -n "$xcode_path"
-          sudo xcode-select -s "$xcode_path"
+          if [ -n "$xcode_path" ]; then
+            sudo xcode-select -s "$xcode_path"
+          fi
           xcodebuild -version
+
+      - name: Verify build SDK
+        run: Scripts/verify-build-sdk.sh
 
       - name: Install XcodeGen
         run: |
@@ -77,7 +84,7 @@ jobs:
 
   macos:
     name: macOS Unit Tests
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 30
 
     steps:
@@ -86,10 +93,17 @@ jobs:
 
       - name: Select Xcode 26
         run: |
+          # Prefer an explicitly versioned Xcode 26 bundle, else keep the image
+          # default. A bundle name cannot guarantee an SDK version, so the real
+          # gate is the "Verify build SDK" step below.
           xcode_path=$(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' -print | sort -V | tail -n 1)
-          test -n "$xcode_path"
-          sudo xcode-select -s "$xcode_path"
+          if [ -n "$xcode_path" ]; then
+            sudo xcode-select -s "$xcode_path"
+          fi
           xcodebuild -version
+
+      - name: Verify build SDK
+        run: Scripts/verify-build-sdk.sh
 
       - name: Install XcodeGen
         run: |
