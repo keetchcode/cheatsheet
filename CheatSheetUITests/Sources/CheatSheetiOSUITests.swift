@@ -131,27 +131,24 @@ final class CheatSheetiOSUITests: XCTestCase {
 
         openSecondaryAction("Move to Trash", in: app)
         openSecondaryAction("Show Trash", in: app)
-        XCTAssertTrue(app.staticTexts["Disposable Note"].waitForExistence(timeout: 10))
-        app.staticTexts["Disposable Note"].tap()
+        XCTAssertTrue(noteList(in: app).staticTexts["Disposable Note"].waitForExistence(timeout: 10))
+        noteList(in: app).staticTexts["Disposable Note"].tap()
 
         let restoreButton = app.buttons["restore-note-button"]
         XCTAssertTrue(restoreButton.waitForExistence(timeout: 10))
         restoreButton.tap()
-        XCTAssertTrue(app.staticTexts["Disposable Note"].waitForExistence(timeout: 10))
+        XCTAssertTrue(noteList(in: app).staticTexts["Disposable Note"].waitForExistence(timeout: 10))
 
-        app.staticTexts["Disposable Note"].tap()
+        noteList(in: app).staticTexts["Disposable Note"].tap()
         XCTAssertTrue(app.textFields["note-title-field"].waitForExistence(timeout: 10))
         openSecondaryAction("Move to Trash", in: app)
         openSecondaryAction("Show Trash", in: app)
-        app.staticTexts["Disposable Note"].tap()
+        noteList(in: app).staticTexts["Disposable Note"].tap()
 
         let deleteButton = app.buttons["delete-note-button"]
         XCTAssertTrue(deleteButton.waitForExistence(timeout: 10))
         deleteButton.tap()
-        let deleteButtons = app.buttons.matching(identifier: "Delete Now")
-        let confirmDeleteButton = deleteButtons.element(boundBy: max(deleteButtons.count - 1, 0))
-        XCTAssertTrue(confirmDeleteButton.waitForExistence(timeout: 10))
-        confirmDeleteButton.tap()
+        confirmPermanentDelete(in: app)
         XCTAssertTrue(app.staticTexts["Trash is empty"].waitForExistence(timeout: 10))
     }
 
@@ -176,9 +173,45 @@ final class CheatSheetiOSUITests: XCTestCase {
         if app.keyboards.count > 0 {
             app.keyboards.buttons["Return"].tap()
         }
+        // iPad keeps the list on screen in a split-view sidebar, so there is
+        // nothing to pop. Tapping anyway is actively harmful: with two
+        // navigation bars present, `navigationBars.buttons.firstMatch`
+        // resolves to the DETAIL pane's first button -- "New Note" -- so this
+        // silently created a note instead of navigating.
+        guard !isSplitViewLayout(in: app) else { return }
         let backButton = app.navigationBars.buttons.firstMatch
         XCTAssertTrue(backButton.waitForExistence(timeout: 10))
         backButton.tap()
+    }
+
+    /// True on the iPad/regular-width layout, where NavigationSplitView shows
+    /// the note list in a sidebar alongside the detail pane.
+    private func isSplitViewLayout(in app: XCUIApplication) -> Bool {
+        app.collectionViews["Sidebar"].exists
+    }
+
+    /// The note list itself: a system "Sidebar" collection view on iPad, and
+    /// the app's own `note-list` on iPhone. Membership assertions must be
+    /// scoped to it. On iPad a note's title also renders in the detail pane,
+    /// which makes an app-wide staticTexts query ambiguous, and lets a stale
+    /// detail pane defeat a "no longer in the list" assertion.
+    private func noteList(in app: XCUIApplication) -> XCUIElement {
+        let sidebar = app.collectionViews["Sidebar"]
+        return sidebar.exists ? sidebar : app.collectionViews["note-list"]
+    }
+
+    /// Confirms the permanent-delete dialog. Both the detail pane and the
+    /// dialog carry a "Delete Now" button, and the previous approach picked
+    /// the last app-wide match on the assumption that the dialog sorts after
+    /// the pane. That does not hold on iPad, where the confirmation is a
+    /// popover: the pane's own button was tapped instead, the dialog was never
+    /// confirmed, and the note survived.
+    private func confirmPermanentDelete(in app: XCUIApplication) {
+        let sheet = app.sheets.firstMatch
+        let container = sheet.waitForExistence(timeout: 5) ? sheet : app.alerts.firstMatch
+        let confirm = container.buttons["Delete Now"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 10), "Delete confirmation dialog never offered Delete Now.")
+        confirm.tap()
     }
 
     private func openSecondaryAction(_ name: String, in app: XCUIApplication) {
@@ -237,13 +270,24 @@ final class CheatSheetiOSUITests: XCTestCase {
         )
     }
 
+    /// iPhone hides the navigationBarDrawer search field until the list
+    /// scrolls, and a full-screen swipe reaches it. iPad keeps the list in a
+    /// split-view sidebar, where `.searchable(placement: .sidebar)` puts the
+    /// field above the first row -- a full-screen swipe there lands on the
+    /// detail pane and scrolls nothing, so the sidebar must be swiped directly.
     private func revealSearchField(in app: XCUIApplication) -> XCUIElement {
         var field = app.searchFields.firstMatch
-        if !field.waitForExistence(timeout: 2) {
-            app.swipeDown()
-            field = app.searchFields.firstMatch
+        if field.waitForExistence(timeout: 2) { return field }
+
+        app.swipeDown()
+        field = app.searchFields.firstMatch
+        if field.waitForExistence(timeout: 2) { return field }
+
+        let sidebar = app.collectionViews["Sidebar"]
+        if sidebar.waitForExistence(timeout: 2) {
+            sidebar.swipeDown()
         }
-        return field
+        return app.searchFields.firstMatch
     }
 
     // MARK: - Ad hoc QA sweep (manual verification pass, runs on iPhone and iPad)
@@ -421,11 +465,8 @@ final class CheatSheetiOSUITests: XCTestCase {
         deleteButton.tap()
         capture(app, "13a-delete-confirmation-dialog")
 
-        let deleteButtons = app.buttons.matching(identifier: "Delete Now")
-        let confirmDeleteButton = deleteButtons.element(boundBy: max(deleteButtons.count - 1, 0))
-        XCTAssertTrue(confirmDeleteButton.waitForExistence(timeout: 10))
-        confirmDeleteButton.tap()
-        XCTAssertFalse(app.staticTexts["Vim Motions"].waitForExistence(timeout: 5), "Permanently deleted note should be gone from Trash.")
+        confirmPermanentDelete(in: app)
+        XCTAssertFalse(noteList(in: app).staticTexts["Vim Motions"].waitForExistence(timeout: 5), "Permanently deleted note should be gone from Trash.")
         capture(app, "13b-note-deleted-from-trash")
         assertNoPersistenceBanner(app)
     }
