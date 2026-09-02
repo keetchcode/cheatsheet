@@ -12,14 +12,17 @@ final class CheatSheetiOSSpanishLocaleUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    private func launchAppInSpanish(showOnboarding: Bool = false) -> XCUIApplication {
+    private func launchAppInSpanish(
+        showOnboarding: Bool = false,
+        extraArguments: [String] = []
+    ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
             "-cheatsheet-ui-testing",
             showOnboarding ? "-cheatsheet-reset-onboarding" : "-cheatsheet-skip-onboarding",
             "-AppleLanguages", "(es-ES)",
             "-AppleLocale", "es_ES"
-        ]
+        ] + extraArguments
         app.launch()
         return app
     }
@@ -78,35 +81,20 @@ final class CheatSheetiOSSpanishLocaleUITests: XCTestCase {
         XCTAssertTrue(app.buttons["new-note-button"].waitForExistence(timeout: 10))
     }
 
-    /// Exercises the empty-Trash string under a Spanish locale. The toggle button
-    /// lives in the toolbar's secondary-action group, which iOS may collapse
-    /// into a "More" overflow button depending on available width.
+    /// Exercises the empty-Trash string under a Spanish locale.
+    ///
+    /// This asserts a translated *string*, so it launches straight into Trash
+    /// rather than driving the toolbar. The toggle lives in the secondary-action
+    /// group, which iOS collapses into a system "More" overflow at compact
+    /// widths -- and a collapsed item becomes a plain menu row that no longer
+    /// resolves by accessibility identifier, so navigating there was a
+    /// width- and OS-dependent coin flip.
     func testTrashEmptyStateRendersInSpanish() throws {
-        let app = launchAppInSpanish()
-
-        XCTAssertTrue(app.buttons["new-note-button"].waitForExistence(timeout: 10))
-        tapToggleTrashButton(in: app)
+        let app = launchAppInSpanish(extraArguments: ["-cheatsheet-show-trash"])
 
         XCTAssertTrue(
             app.staticTexts["La papelera está vacía"].waitForExistence(timeout: 10),
             "Expected the empty Trash state to render in Spanish."
         )
-    }
-
-    /// The overflow button itself is system-provided chrome, so under a Spanish
-    /// process locale it renders as "Más" rather than "More" -- accept either,
-    /// since which one appears can depend on the OS version under test.
-    private func tapToggleTrashButton(in app: XCUIApplication) {
-        let directButton = app.buttons["toggle-trash-button"]
-        if directButton.waitForExistence(timeout: 2), directButton.isHittable {
-            directButton.tap()
-            return
-        }
-
-        let moreButton = app.buttons.matching(NSPredicate(format: "label == 'More' OR label == 'Más'")).firstMatch
-        XCTAssertTrue(moreButton.waitForExistence(timeout: 10))
-        moreButton.tap()
-        XCTAssertTrue(directButton.waitForExistence(timeout: 10))
-        directButton.tap()
     }
 }

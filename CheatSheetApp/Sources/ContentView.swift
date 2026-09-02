@@ -10,7 +10,7 @@ struct ContentView: View {
     @AppStorage("showWidgetHints") private var showWidgetHints = true
     let store: NoteStore
     @State private var isShowingOnboarding = false
-    @State private var isShowingTrash = false
+    @State private var isShowingTrash = CheatSheetLaunchEnvironment.isStartingInTrash
     @State private var compactPath: [CheatSheetNote.ID] = []
 
     var body: some View {
