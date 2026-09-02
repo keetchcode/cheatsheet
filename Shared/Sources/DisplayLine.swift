@@ -57,7 +57,10 @@ public extension String {
 
         if line.hasPrefix("#") {
             isHeading = true
-            line = line.trimmingCharacters(in: CharacterSet(charactersIn: "# "))
+            // Strip only the LEADING hashes. trimmingCharacters(in:) works on both
+            // ends, which silently ate the trailing "#" of headings like "# C#"
+            // and "# F#" -- on a developer cheat sheet those are content.
+            line = String(line.drop(while: { $0 == "#" })).trimmingCharacters(in: .whitespaces)
         }
 
         let markers = ["- [x] ", "* [x] ", "[x] ", "- [X] ", "* [X] ", "[X] "]

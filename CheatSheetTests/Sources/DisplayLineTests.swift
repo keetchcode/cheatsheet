@@ -10,6 +10,22 @@ struct DisplayLineTests {
         #expect(parsed.isComplete == false)
     }
 
+    @Test func headingKeepsTrailingHashInLanguageNames() {
+        // Regression: trimmingCharacters(in:) trimmed both ends, so "# C#"
+        // rendered as "C" in both the editor and the widget.
+        #expect("# C#".parsedChecklistLine.text == "C#")
+        #expect("# F#".parsedChecklistLine.text == "F#")
+        #expect("# C# vs F#".parsedChecklistLine.text == "C# vs F#")
+    }
+
+    @Test func headingStripsOnlyLeadingHashes() {
+        let parsed = "## Objective-C".parsedChecklistLine
+
+        #expect(parsed.text == "Objective-C")
+        #expect(parsed.isHeading)
+        #expect(parsed.isTask == false)
+    }
+
     @Test func parsesCompleteTaskLine() {
         let parsed = "- [x] Run build".parsedChecklistLine
 
