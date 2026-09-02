@@ -5,70 +5,99 @@ on:
   push:
     branches:
       - main
+      - develop
+
+# A newer push to the same ref makes the in-flight run obsolete. Cancelling it
+# frees the macOS runners, which are the scarce resource here.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  ios:
-    name: iOS Unit Tests
+  # Cheap, toolchain-free checks. Runs first so a bad plist or a stale
+  # deployment target fails in seconds rather than after 12 minutes of
+  # simulator work.
+  checks:
+    name: Project checks
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 10
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+
+      - name: Verify project configuration
+        run: Scripts/verify-project-config.sh
+
+      - name: Verify localization catalogs
+        run: |
+          set -euo pipefail
+          if [ -x Scripts/verify-localization.sh ]; then
+            Scripts/verify-localization.sh
+          else
+            echo "Scripts/verify-localization.sh not on this branch - skipping"
+          fi
+
+  ios:
+    name: iOS (${{ matrix.device }})
+    needs: checks
+    runs-on: macos-26
+    timeout-minutes: 45
+    strategy:
+      # One leg failing must never hide another's result.
+      fail-fast: false
+      matrix:
+        # iPad is deliberately absent, not forgotten. iPhone and iPad exercise
+        # structurally different UI (NavigationStack vs NavigationSplitView),
+        # and the UI suite on this branch has no iPad handling at all -- no
+        # idiom checks, no sidebar paths -- so an `ipad` leg would fail on the
+        # first UI test. The iPad-capable suite arrives with the App Store
+        # screenshots branch; add `ipad` to this list once it lands and the
+        # rest of this job needs no other change.
+        device: [iphone]
 
     steps:
       - name: Check out
         uses: actions/checkout@v5
 
-      - name: Select Xcode 26
-        run: |
-          # Prefer an explicitly versioned Xcode 26 bundle, else keep the image
-          # default. A bundle name cannot guarantee an SDK version, so the real
-          # gate is the "Verify build SDK" step below.
-          xcode_path=$(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' -print | sort -V | tail -n 1)
-          if [ -n "$xcode_path" ]; then
-            sudo xcode-select -s "$xcode_path"
-          fi
-          xcodebuild -version
+      - name: Set up Xcode and generate the project
+        uses: ./.github/actions/setup
 
-      - name: Verify build SDK
-        run: Scripts/verify-build-sdk.sh
-
-      - name: Install XcodeGen
-        run: |
-          if ! command -v xcodegen >/dev/null 2>&1; then
-            brew install xcodegen
-          fi
-
-      - name: Generate project
-        run: xcodegen generate --spec project.yml --project . --project-root . --quiet
-
-      - name: Verify project configuration
-        run: Scripts/verify-project-config.sh
-
-      - name: Resolve iOS simulator
+      - name: Resolve ${{ matrix.device }} simulator
         id: simulator
         run: |
           set -o pipefail
-          udid=$(Scripts/resolve-ios-simulator.sh)
+          udid=$(Scripts/resolve-ios-simulator.sh ${{ matrix.device }})
           echo "udid=$udid" >> "$GITHUB_OUTPUT"
           xcrun simctl list devices available | grep "$udid"
 
+      # Unit tests are pure logic and device-independent, so run them once
+      # rather than paying for them on both legs of the matrix.
       - name: Run iOS unit tests
+        if: matrix.device == 'iphone'
         run: |
           set -o pipefail
           xcodebuild test \
             -project CheatSheet.xcodeproj \
             -scheme CheatSheetiOS \
             -destination "id=${{ steps.simulator.outputs.udid }}" \
-            -derivedDataPath "$RUNNER_TEMP/CheatSheet-iOS-DD" \
+            -derivedDataPath "$RUNNER_TEMP/DD-unit" \
+            -resultBundlePath "$RUNNER_TEMP/results/ios-unit.xcresult" \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Run iOS UI smoke tests
+      # No -only-testing: the UI target globs its whole source directory, so
+      # naming classes here would silently skip any newly added test class.
+      - name: Run iOS UI tests
         run: |
           set -o pipefail
           xcodebuild test \
             -project CheatSheet.xcodeproj \
             -scheme CheatSheetiOSUI \
             -destination "id=${{ steps.simulator.outputs.udid }}" \
-            -derivedDataPath "$RUNNER_TEMP/CheatSheet-iOS-UI-DD" \
-            -only-testing:CheatSheetiOSUITests/CheatSheetiOSUITests \
+            -derivedDataPath "$RUNNER_TEMP/DD-ui" \
+            -resultBundlePath "$RUNNER_TEMP/results/ios-ui-${{ matrix.device }}.xcresult" \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Build iOS Release configuration
@@ -79,40 +108,32 @@ jobs:
             -scheme CheatSheetiOS \
             -configuration Release \
             -destination "id=${{ steps.simulator.outputs.udid }}" \
-            -derivedDataPath "$RUNNER_TEMP/CheatSheet-iOS-Release-DD" \
+            -derivedDataPath "$RUNNER_TEMP/DD-release" \
             CODE_SIGNING_ALLOWED=NO
 
+      # UI tests attach screenshots with .keepAlways; without this they die
+      # with the runner and a failure has to be reproduced blind.
+      - name: Upload iOS test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ matrix.device }}-xcresult
+          path: ${{ runner.temp }}/results
+          retention-days: 14
+          if-no-files-found: ignore
+
   macos:
-    name: macOS Unit Tests
+    name: macOS
+    needs: checks
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Check out
         uses: actions/checkout@v5
 
-      - name: Select Xcode 26
-        run: |
-          # Prefer an explicitly versioned Xcode 26 bundle, else keep the image
-          # default. A bundle name cannot guarantee an SDK version, so the real
-          # gate is the "Verify build SDK" step below.
-          xcode_path=$(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' -print | sort -V | tail -n 1)
-          if [ -n "$xcode_path" ]; then
-            sudo xcode-select -s "$xcode_path"
-          fi
-          xcodebuild -version
-
-      - name: Verify build SDK
-        run: Scripts/verify-build-sdk.sh
-
-      - name: Install XcodeGen
-        run: |
-          if ! command -v xcodegen >/dev/null 2>&1; then
-            brew install xcodegen
-          fi
-
-      - name: Generate project
-        run: xcodegen generate --spec project.yml --project . --project-root . --quiet
+      - name: Set up Xcode and generate the project
+        uses: ./.github/actions/setup
 
       - name: Run macOS unit tests
         run: |
@@ -121,16 +142,38 @@ jobs:
             -project CheatSheet.xcodeproj \
             -scheme CheatSheet \
             -destination 'platform=macOS' \
-            -derivedDataPath "$RUNNER_TEMP/CheatSheet-macOS-DD" \
+            -derivedDataPath "$RUNNER_TEMP/DD-macos" \
+            -resultBundlePath "$RUNNER_TEMP/results/macos-unit.xcresult" \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Build macOS Release configuration
+      # The shipped Mac app must carry both slices. Building for x86_64 is
+      # cross-compilation and needs no Rosetta; only *running* x86_64 tests
+      # would, which is why that half stays in Scripts/verify-macos.sh.
+      - name: Build universal macOS Release and verify architectures
         run: |
           set -o pipefail
           xcodebuild build \
             -project CheatSheet.xcodeproj \
             -scheme CheatSheetApp \
             -configuration Release \
-            -destination 'platform=macOS' \
-            -derivedDataPath "$RUNNER_TEMP/CheatSheet-macOS-Release-DD" \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath "$RUNNER_TEMP/DD-macos-universal" \
+            ARCHS='arm64 x86_64' \
+            ONLY_ACTIVE_ARCH=NO \
             CODE_SIGNING_ALLOWED=NO
+          binary="$RUNNER_TEMP/DD-macos-universal/Build/Products/Release/wesleycheatsheet.app/Contents/MacOS/wesleycheatsheet"
+          test -f "$binary" || { echo "::error::Release binary not found at $binary"; exit 1; }
+          lipo -info "$binary"
+          for arch in arm64 x86_64; do
+            lipo -info "$binary" | grep -q "$arch" \
+              || { echo "::error::universal binary is missing the $arch slice"; exit 1; }
+          done
+
+      - name: Upload macOS test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-xcresult
+          path: ${{ runner.temp }}/results
+          retention-days: 14
+          if-no-files-found: ignore
