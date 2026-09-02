@@ -49,14 +49,11 @@ jobs:
       # One leg failing must never hide another's result.
       fail-fast: false
       matrix:
-        # iPad is deliberately absent, not forgotten. iPhone and iPad exercise
-        # structurally different UI (NavigationStack vs NavigationSplitView),
-        # and the UI suite on this branch has no iPad handling at all -- no
-        # idiom checks, no sidebar paths -- so an `ipad` leg would fail on the
-        # first UI test. The iPad-capable suite arrives with the App Store
-        # screenshots branch; add `ipad` to this list once it lands and the
-        # rest of this job needs no other change.
-        device: [iphone]
+        # iPhone and iPad exercise structurally different UI: a compact
+        # NavigationStack with a navigationBarDrawer search field, versus a
+        # NavigationSplitView with a sidebar. The UI suite branches on the
+        # idiom, and until now only the iPhone half had ever run anywhere.
+        device: [iphone, ipad]
 
     steps:
       - name: Check out
