@@ -12,7 +12,11 @@ final class CheatSheetiOSUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = [
             "-cheatsheet-ui-testing",
-            showOnboarding ? "-cheatsheet-reset-onboarding" : "-cheatsheet-skip-onboarding"
+            showOnboarding ? "-cheatsheet-reset-onboarding" : "-cheatsheet-skip-onboarding",
+            // This suite asserts rendered English text throughout, so pin the
+            // locale rather than depending on the simulator's default.
+            "-AppleLanguages", "(en)",
+            "-AppleLocale", "en_US"
         ]
         app.launch()
         return app
@@ -220,6 +224,19 @@ final class CheatSheetiOSUITests: XCTestCase {
         }
     }
 
+    /// Taps a text field and waits for the keyboard before returning. Typing
+    /// without this races first-responder assignment on a loaded machine, which
+    /// surfaces as "Neither element nor any descendant has keyboard focus"
+    /// rather than as a real product failure.
+    private func focusForTyping(_ field: XCUIElement, in app: XCUIApplication) {
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        XCTAssertTrue(
+            app.keyboards.element.waitForExistence(timeout: 10),
+            "Expected the keyboard to appear before typing."
+        )
+    }
+
     private func revealSearchField(in app: XCUIApplication) -> XCUIElement {
         var field = app.searchFields.firstMatch
         if !field.waitForExistence(timeout: 2) {
@@ -354,14 +371,16 @@ final class CheatSheetiOSUITests: XCTestCase {
 
         // --- Item 9: search ---
         let searchField = revealSearchField(in: app)
-        XCTAssertTrue(searchField.waitForExistence(timeout: 10))
-        searchField.tap()
+        focusForTyping(searchField, in: app)
         searchField.typeText("docker")
         XCTAssertTrue(app.staticTexts["Docker Cleanup"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.staticTexts["Vim Motions"].exists)
         capture(app, "11a-search-filtered-docker")
 
         if let value = searchField.value as? String, !value.isEmpty {
+            // The screenshot above is a synchronous round trip long enough for
+            // .searchable to drop first responder, so re-focus before clearing.
+            focusForTyping(searchField, in: app)
             searchField.typeText(String(repeating: "\u{8}", count: value.count))
         }
         XCTAssertTrue(app.staticTexts["Vim Motions"].waitForExistence(timeout: 10), "Full list should return after clearing search.")
