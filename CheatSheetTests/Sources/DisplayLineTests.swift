@@ -26,6 +26,26 @@ struct DisplayLineTests {
         #expect(parsed.isTask == false)
     }
 
+    @Test func previewSkipsAHeadingThatOnlyRepeatsTheTitle() {
+        // Both shipped starter notes open with "# <their own title>"; without
+        // this the row rendered the same string as title and subtitle.
+        let note = CheatSheetNote(title: "Git Flow", body: "# Git Flow\n- git status")
+
+        #expect(note.previewLine == "git status")
+    }
+
+    @Test func previewKeepsAHeadingThatCarriesNewInformation() {
+        let note = CheatSheetNote(title: "Git Flow", body: "# Before you push\n- git status")
+
+        #expect(note.previewLine == "Before you push")
+    }
+
+    @Test func previewSkipsOnlyTheFirstTitleHeading() {
+        let note = CheatSheetNote(title: "Git Flow", body: "# Git Flow\n# Git Flow\n- git status")
+
+        #expect(note.previewLine == "Git Flow")
+    }
+
     @Test func parsesCompleteTaskLine() {
         let parsed = "- [x] Run build".parsedChecklistLine
 

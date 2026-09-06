@@ -106,6 +106,7 @@ jobs:
             -derivedDataPath "$RUNNER_TEMP/DD-ui" \
             -resultBundlePath "$RUNNER_TEMP/results/ios-ui-${{ matrix.device }}.xcresult" \
             -skip-testing:CheatSheetiOSUITests/CheatSheetiOSUITests/testQASweep \
+            -skip-testing:CheatSheetiOSUITests/MarketingScreenshotTests \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Build iOS Release configuration

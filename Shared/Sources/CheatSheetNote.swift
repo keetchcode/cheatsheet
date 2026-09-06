@@ -86,6 +86,11 @@ public struct CheatSheetNote: Codable, Identifiable, Equatable, Sendable {
         return trimmed.isEmpty ? String(localized: "note.untitled", defaultValue: "Untitled Note") : trimmed
     }
 
+    /// Subtitle shown beneath the title in list rows.
+    public var previewLine: String {
+        body.notePreviewLine(skippingLeadingTitle: displayTitle)
+    }
+
     public var fontStyle: CheatSheetFontStyle {
         get {
             guard let fontStyleRawValue,

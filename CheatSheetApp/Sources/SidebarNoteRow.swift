@@ -29,7 +29,7 @@ struct SidebarNoteRow: View {
                     }
                 }
 
-                Text(note.isArchived ? note.trashStatusText : note.body.notePreviewLine)
+                Text(note.isArchived ? note.trashStatusText : note.previewLine)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

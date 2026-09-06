@@ -39,11 +39,33 @@ public extension CheatSheetNote {
 
 public extension String {
     var notePreviewLine: String {
+        notePreviewLine(skippingLeadingTitle: nil)
+    }
+
+    /// The row subtitle for this body.
+    ///
+    /// Pass the note's title to skip a leading heading that merely repeats it.
+    /// Opening a note with `# <its own title>` is the natural thing to write --
+    /// both shipped starter notes do it -- and without this the row renders the
+    /// same string twice, which reads as placeholder data. Only an exact match
+    /// is skipped, so a heading that carries real information is still shown.
+    func notePreviewLine(skippingLeadingTitle title: String?) -> String {
+        var hasSkippedTitleHeading = false
+
         for rawLine in split(whereSeparator: \.isNewline) {
-            let text = String(rawLine).parsedChecklistLine.text
-            if !text.isEmpty {
-                return text
+            let parsed = String(rawLine).parsedChecklistLine
+            let text = parsed.text
+            if text.isEmpty { continue }
+
+            if !hasSkippedTitleHeading,
+               parsed.isHeading,
+               let title,
+               text.caseInsensitiveCompare(title) == .orderedSame {
+                hasSkippedTitleHeading = true
+                continue
             }
+
+            return text
         }
 
         return String(localized: "note.previewEmpty", defaultValue: "Empty note")

@@ -234,7 +234,7 @@ private struct MenuBarNoteRow: View {
                     }
                 }
 
-                Text(note.body.notePreviewLine)
+                Text(note.previewLine)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
