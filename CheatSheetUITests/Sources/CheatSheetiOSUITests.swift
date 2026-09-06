@@ -80,9 +80,7 @@ final class CheatSheetiOSUITests: XCTestCase {
 
         let titleField = app.textFields["note-title-field"]
         XCTAssertTrue(titleField.waitForExistence(timeout: 10))
-        titleField.tap()
-        titleField.press(forDuration: 1.0)
-        app.menuItems["Select All"].tap()
+        selectAllText(in: titleField, app: app)
         titleField.typeText("Release Commands")
 
         let bodyEditor = app.textViews["note-body-editor"]
@@ -162,16 +160,35 @@ final class CheatSheetiOSUITests: XCTestCase {
     private func renameCurrentNote(_ title: String, in app: XCUIApplication) {
         let titleField = app.textFields["note-title-field"]
         XCTAssertTrue(titleField.waitForExistence(timeout: 10))
-        titleField.tap()
-        titleField.press(forDuration: 1.0)
-        app.menuItems["Select All"].tap()
+        selectAllText(in: titleField, app: app)
         titleField.typeText(title)
         returnToList(in: app)
     }
 
+    /// Selects all text in a field via the system edit menu.
+    ///
+    /// That menu is system chrome and appears on its own schedule -- later on a
+    /// loaded machine. Two of the three call sites tapped it with no wait,
+    /// which surfaced as "Failed to tap \"Select All\" MenuItem: No matches
+    /// found" rather than as a product failure.
+    private func selectAllText(in field: XCUIElement, app: XCUIApplication) {
+        field.tap()
+        field.press(forDuration: 1.0)
+        XCTAssertTrue(
+            app.menuItems["Select All"].waitForExistence(timeout: 10),
+            "The edit menu never offered Select All."
+        )
+        app.menuItems["Select All"].tap()
+    }
+
     private func returnToList(in app: XCUIApplication) {
         if app.keyboards.count > 0 {
-            app.keyboards.buttons["Return"].tap()
+            // Present is not the same as hittable: under load this failed with
+            // kAXErrorCannotComplete scrolling the Return key into view.
+            let returnKey = app.keyboards.buttons["Return"]
+            if returnKey.waitForExistence(timeout: 5), returnKey.isHittable {
+                returnKey.tap()
+            }
         }
         // iPad keeps the list on screen in a split-view sidebar, so there is
         // nothing to pop. Tapping anyway is actively harmful: with two
