@@ -27,6 +27,8 @@ struct ChecklistLineView: View {
 
     private var accessibilityLabel: String {
         guard isTask else { return text }
-        return isComplete ? "Complete, \(text)" : "Incomplete, \(text)"
+        return isComplete
+            ? String(localized: "checklist.line.complete", defaultValue: "Complete, \(text)")
+            : String(localized: "checklist.line.incomplete", defaultValue: "Incomplete, \(text)")
     }
 }

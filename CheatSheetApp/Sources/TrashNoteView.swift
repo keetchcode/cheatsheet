@@ -30,7 +30,7 @@ struct TrashNoteView: View {
                     Text(note.displayTitle)
                         .font(.headline)
 
-                    Text(note.body.notePreviewLine)
+                    Text(note.previewLine)
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .lineLimit(3)

@@ -83,7 +83,12 @@ public struct CheatSheetNote: Codable, Identifiable, Equatable, Sendable {
 
     public var displayTitle: String {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "Untitled Note" : trimmed
+        return trimmed.isEmpty ? String(localized: "note.untitled", defaultValue: "Untitled Note") : trimmed
+    }
+
+    /// Subtitle shown beneath the title in list rows.
+    public var previewLine: String {
+        body.notePreviewLine(skippingLeadingTitle: displayTitle)
     }
 
     public var fontStyle: CheatSheetFontStyle {
@@ -108,8 +113,8 @@ public struct CheatSheetNote: Codable, Identifiable, Equatable, Sendable {
 public extension CheatSheetNote {
     static let starterNotes: [CheatSheetNote] = [
         CheatSheetNote(
-            title: "Widget Formatting Demo",
-            body: """
+            title: String(localized: "starterNote.widgetDemo.title", defaultValue: "Widget Formatting Demo"),
+            body: String(localized: "starterNote.widgetDemo.body", defaultValue: """
             # Widget Formatting Demo
             Plain lines show as simple reminder text.
             - Bullets become quick checklist rows.
@@ -119,20 +124,20 @@ public extension CheatSheetNote {
             - Pin one note to show it in the widget.
             - Pick a color and font above the editor.
             - Short lines read best on the desktop.
-            """,
+            """),
             tintHex: CheatSheetPalette.indigo.rawValue,
             isPinned: true
         ),
         CheatSheetNote(
-            title: "Git Flow",
-            body: """
+            title: String(localized: "starterNote.gitFlow.title", defaultValue: "Git Flow"),
+            body: String(localized: "starterNote.gitFlow.body", defaultValue: """
             # Git Flow
             - git status
             - git switch -c feature/name
             - git add .
             - git commit -m "Describe change"
             - git push -u origin HEAD
-            """,
+            """),
             tintHex: CheatSheetPalette.cyan.rawValue
         )
     ]
@@ -164,16 +169,16 @@ public enum CheatSheetPalette: String, CaseIterable, Identifiable, Sendable {
 
     public var displayName: String {
         switch self {
-        case .blue: "Blue"
-        case .cyan: "Cyan"
-        case .violet: "Violet"
-        case .mint: "Mint"
-        case .lime: "Lime"
-        case .amber: "Amber"
-        case .coral: "Coral"
-        case .rose: "Rose"
-        case .indigo: "Indigo"
-        case .graphite: "Graphite"
+        case .blue: String(localized: "colorName.blue", defaultValue: "Blue")
+        case .cyan: String(localized: "colorName.cyan", defaultValue: "Cyan")
+        case .violet: String(localized: "colorName.violet", defaultValue: "Violet")
+        case .mint: String(localized: "colorName.mint", defaultValue: "Mint")
+        case .lime: String(localized: "colorName.lime", defaultValue: "Lime")
+        case .amber: String(localized: "colorName.amber", defaultValue: "Amber")
+        case .coral: String(localized: "colorName.coral", defaultValue: "Coral")
+        case .rose: String(localized: "colorName.rose", defaultValue: "Rose")
+        case .indigo: String(localized: "colorName.indigo", defaultValue: "Indigo")
+        case .graphite: String(localized: "colorName.graphite", defaultValue: "Graphite")
         }
     }
 
@@ -204,10 +209,10 @@ public enum CheatSheetFontStyle: String, CaseIterable, Identifiable, Codable, Se
 
     public var displayName: String {
         switch self {
-        case .monospaced: "Mono"
-        case .system: "System"
-        case .rounded: "Rounded"
-        case .serif: "Serif"
+        case .monospaced: String(localized: "fontStyle.monospaced", defaultValue: "Mono")
+        case .system: String(localized: "fontStyle.system", defaultValue: "System")
+        case .rounded: String(localized: "fontStyle.rounded", defaultValue: "Rounded")
+        case .serif: String(localized: "fontStyle.serif", defaultValue: "Serif")
         }
     }
 

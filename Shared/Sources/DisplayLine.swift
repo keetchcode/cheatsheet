@@ -39,14 +39,36 @@ public extension CheatSheetNote {
 
 public extension String {
     var notePreviewLine: String {
+        notePreviewLine(skippingLeadingTitle: nil)
+    }
+
+    /// The row subtitle for this body.
+    ///
+    /// Pass the note's title to skip a leading heading that merely repeats it.
+    /// Opening a note with `# <its own title>` is the natural thing to write --
+    /// both shipped starter notes do it -- and without this the row renders the
+    /// same string twice, which reads as placeholder data. Only an exact match
+    /// is skipped, so a heading that carries real information is still shown.
+    func notePreviewLine(skippingLeadingTitle title: String?) -> String {
+        var hasSkippedTitleHeading = false
+
         for rawLine in split(whereSeparator: \.isNewline) {
-            let text = String(rawLine).parsedChecklistLine.text
-            if !text.isEmpty {
-                return text
+            let parsed = String(rawLine).parsedChecklistLine
+            let text = parsed.text
+            if text.isEmpty { continue }
+
+            if !hasSkippedTitleHeading,
+               parsed.isHeading,
+               let title,
+               text.caseInsensitiveCompare(title) == .orderedSame {
+                hasSkippedTitleHeading = true
+                continue
             }
+
+            return text
         }
 
-        return "Empty note"
+        return String(localized: "note.previewEmpty", defaultValue: "Empty note")
     }
 
     var parsedChecklistLine: (text: String, isTask: Bool, isComplete: Bool, isHeading: Bool) {
@@ -57,7 +79,10 @@ public extension String {
 
         if line.hasPrefix("#") {
             isHeading = true
-            line = line.trimmingCharacters(in: CharacterSet(charactersIn: "# "))
+            // Strip only the LEADING hashes. trimmingCharacters(in:) works on both
+            // ends, which silently ate the trailing "#" of headings like "# C#"
+            // and "# F#" -- on a developer cheat sheet those are content.
+            line = String(line.drop(while: { $0 == "#" })).trimmingCharacters(in: .whitespaces)
         }
 
         let markers = ["- [x] ", "* [x] ", "[x] ", "- [X] ", "* [X] ", "[X] "]

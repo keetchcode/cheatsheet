@@ -1,0 +1,10 @@
+device	order	match	eyebrow	headline	keyword_focus
+iphone	1	M1-library	DEVELOPER CHEAT SHEET	Every command, one tap away	developer cheat sheet
+iphone	2	M2-note-open	MONOSPACED BY DEFAULT	Write commands in plain text	monospaced, plain text
+iphone	3	M3-style-controls	TEN COLOR TINTS	Color-code notes by project	color-code, project
+iphone	4	M4-font-menu	FOUR FONT STYLES	Choose mono, serif, or rounded	font, mono, serif
+iphone	5	M5-search	INSTANT SEARCH	Find any snippet as you type	search, snippet
+iphone	6	M7-trash-detail	30-DAY TRASH	Restore deleted notes for 30 days	restore, deleted notes
+ipad	1	M1-library	IPAD SPLIT VIEW	Browse and edit side by side	ipad split view
+ipad	2	M5-search	FILTER AS YOU TYPE	Search every note instantly	search notes
+ipad	3	M4-font-menu	MONOSPACE AND SERIF	Choose the font that fits	monospace, serif

@@ -1,0 +1,34 @@
+name: Set up Xcode and generate the project
+description: >-
+  Selects an Xcode 26 toolchain, asserts the SDK major matches this branch's
+  contract, installs XcodeGen, and generates CheatSheet.xcodeproj.
+
+runs:
+  using: composite
+  steps:
+    - name: Select Xcode 26
+      shell: bash
+      run: |
+        # Prefer an explicitly versioned Xcode 26 bundle, else keep the image
+        # default. A bundle name cannot guarantee an SDK version, so the real
+        # gate is the SDK check below.
+        xcode_path=$(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' -print | sort -V | tail -n 1)
+        if [ -n "$xcode_path" ]; then
+          sudo xcode-select -s "$xcode_path"
+        fi
+        xcodebuild -version
+
+    - name: Verify build SDK
+      shell: bash
+      run: Scripts/verify-build-sdk.sh
+
+    - name: Install XcodeGen
+      shell: bash
+      run: |
+        if ! command -v xcodegen >/dev/null 2>&1; then
+          brew install xcodegen
+        fi
+
+    - name: Generate project
+      shell: bash
+      run: xcodegen generate --spec project.yml --project . --project-root . --quiet
